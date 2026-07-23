@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: api-test
+
+  datasource:
+    url: jdbc:h2:mem:devoluciones_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+  flyway:
+    enabled: false
+
+app:
+  security:
+    jwt:
+      secret: DevolucionesAppSecretoSuperSeguroConMasDe32Caracteres2026!
+      expiration-minutes: 60
+  carga:
+    dir: ./target/carga_test
+    max-filas: 50000
+
+server:
+  port: 0
