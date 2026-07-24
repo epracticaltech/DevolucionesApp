@@ -71,18 +71,12 @@ public class SolicitudRepositoryAdapter implements SolicitudRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public PaginaResultado<Solicitud> buscarConFiltros(SolicitudFiltro filtro) {
-        return buscarConFiltrosYPaginacion(filtro, filtro.getPagina(), filtro.getTamano());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public PaginaResultado<Solicitud> buscarConFiltrosYPaginacion(SolicitudFiltro filtro, int pagina, int tamano) {
         Specification<SolicitudEntity> spec = Specification
-                .where(SolicitudSpecifications.conEstado(filtro.getEstado()))
-                .and(SolicitudSpecifications.conRut(filtro.getRutCliente()))
-                .and(SolicitudSpecifications.conOrigen(filtro.getOrigen()))
-                .and(SolicitudSpecifications.entreFechas(filtro.getFechaDesde(), filtro.getFechaHasta()));
+                .where(SolicitudSpecifications.conEstado(filtro != null ? filtro.getEstado() : null))
+                .and(SolicitudSpecifications.conRut(filtro != null ? filtro.getRutCliente() : null))
+                .and(SolicitudSpecifications.conOrigen(filtro != null ? filtro.getOrigen() : null))
+                .and(SolicitudSpecifications.entreFechas(filtro != null ? filtro.getFechaDesde() : null, filtro != null ? filtro.getFechaHasta() : null));
 
         PageRequest pageRequest = PageRequest.of(pagina, tamano, Sort.by("fechaCreacion").descending());
         Page<SolicitudEntity> page = solicitudJpaRepository.findAll(spec, pageRequest);
@@ -114,12 +108,6 @@ public class SolicitudRepositoryAdapter implements SolicitudRepositoryPort {
         }
         List<EventoSolicitudEntity> entities = eventos.stream().map(this::toEntity).toList();
         eventoSolicitudJpaRepository.saveAll(entities);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<EventoSolicitud> obtenerHistorialEventos(Long solicitudId) {
-        return obtenerHistorialPorSolicitudId(solicitudId);
     }
 
     @Override

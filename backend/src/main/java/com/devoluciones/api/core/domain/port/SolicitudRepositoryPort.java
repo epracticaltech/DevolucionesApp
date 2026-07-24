@@ -20,15 +20,11 @@ public interface SolicitudRepositoryPort {
 
     boolean existePorReferenciaBanco(String referenciaBanco);
 
-    PaginaResultado<Solicitud> buscarConFiltros(SolicitudFiltro filtro);
-
     PaginaResultado<Solicitud> buscarConFiltrosYPaginacion(SolicitudFiltro filtro, int pagina, int tamano);
 
     EventoSolicitud registrarEvento(EventoSolicitud evento);
 
     void registrarEventos(List<EventoSolicitud> eventos);
-
-    List<EventoSolicitud> obtenerHistorialEventos(Long solicitudId);
 
     List<EventoSolicitud> obtenerHistorialPorSolicitudId(Long solicitudId);
 }
