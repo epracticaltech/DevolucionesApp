@@ -1,12 +1,11 @@
 package com.devoluciones.api.core.usecase.solicitudes;
 
-import com.devoluciones.api.core.domain.exceptions.AccesoDenegadoException;
 import com.devoluciones.api.core.domain.exceptions.ReglaNegocioException;
 import com.devoluciones.api.core.domain.exceptions.TransicionInvalidaException;
 import com.devoluciones.api.core.domain.models.Solicitud;
+import com.devoluciones.api.core.domain.models.Usuario;
 import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
-import com.devoluciones.api.infrastructure.entrypoints.dto.request.UsuarioAutenticadoDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,8 +21,12 @@ class GestionarTransicionesRevisionUseCaseTest {
     private SolicitudRepositoryPort solicitudRepository;
     private GestionarTransicionesRevisionUseCase useCase;
 
-    private final UsuarioAutenticadoDto supervisor = new UsuarioAutenticadoDto("supervisor1", "SUPERVISOR");
-    private final UsuarioAutenticadoDto analista = new UsuarioAutenticadoDto("analista1", "ANALISTA");
+    private final Usuario supervisor = Usuario.builder()
+            .id(1L)
+            .username("supervisor1")
+            .rol("SUPERVISOR")
+            .mail("supervisor1@devoluciones.cl")
+            .build();
 
     @BeforeEach
     void setUp() {
@@ -32,7 +35,7 @@ class GestionarTransicionesRevisionUseCaseTest {
     }
 
     @Test
-    @DisplayName("Aprobar solicitud en EN_REVISION con rol SUPERVISOR (diferente al creador) resulta en estado APROBADA")
+    @DisplayName("Aprobar solicitud en EN_REVISION resulta en estado APROBADA")
     void aprobarExito() {
         Long id = 1L;
         Solicitud solicitud = Solicitud.builder()
@@ -55,22 +58,13 @@ class GestionarTransicionesRevisionUseCaseTest {
     }
 
     @Test
-    @DisplayName("R2: Aprobar con rol ANALISTA lanza AccesoDenegadoException (HTTP 403)")
-    void aprobarRolAnalistaLanzaExcepcion403() {
-        Long id = 1L;
-
-        assertThrows(AccesoDenegadoException.class, () -> useCase.aprobar(id, analista, "comentario"));
-        Mockito.verify(solicitudRepository, Mockito.never()).guardar(any());
-    }
-
-    @Test
     @DisplayName("R7: Supervisor que creó la solicitud intenta aprobarla y lanza ReglaNegocioException (HTTP 400)")
     void aprobarMismoUsuarioCreadorLanzaExcepcion400() {
         Long id = 1L;
         Solicitud solicitud = Solicitud.builder()
                 .id(id)
                 .estado(EstadoSolicitud.EN_REVISION)
-                .creadaPor("supervisor1") // El supervisor creó la solicitud
+                .creadaPor("supervisor1")
                 .build();
 
         Mockito.when(solicitudRepository.buscarPorId(id)).thenReturn(Optional.of(solicitud));
@@ -96,7 +90,7 @@ class GestionarTransicionesRevisionUseCaseTest {
     }
 
     @Test
-    @DisplayName("Rechazar solicitud en EN_REVISION con rol SUPERVISOR y motivo asigna estado RECHAZADA y motivo")
+    @DisplayName("Rechazar solicitud en EN_REVISION asigna estado RECHAZADA y motivo")
     void rechazarExito() {
         Long id = 1L;
         Solicitud solicitud = Solicitud.builder()
@@ -124,15 +118,6 @@ class GestionarTransicionesRevisionUseCaseTest {
         Long id = 1L;
 
         assertThrows(ReglaNegocioException.class, () -> useCase.rechazar(id, supervisor, "   ", "Comentario"));
-        Mockito.verify(solicitudRepository, Mockito.never()).guardar(any());
-    }
-
-    @Test
-    @DisplayName("R2: Rechazar con rol ANALISTA lanza AccesoDenegadoException (HTTP 403)")
-    void rechazarRolAnalistaLanzaExcepcion403() {
-        Long id = 1L;
-
-        assertThrows(AccesoDenegadoException.class, () -> useCase.rechazar(id, analista, "Motivo", "Comentario"));
         Mockito.verify(solicitudRepository, Mockito.never()).guardar(any());
     }
 

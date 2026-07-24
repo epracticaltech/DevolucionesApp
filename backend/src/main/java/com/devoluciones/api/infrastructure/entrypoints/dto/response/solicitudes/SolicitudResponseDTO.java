@@ -1,4 +1,4 @@
-package com.devoluciones.api.infrastructure.entrypoints.dto.response;
+package com.devoluciones.api.infrastructure.entrypoints.dto.response.solicitudes;
 
 import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.models.enums.OrigenSolicitud;

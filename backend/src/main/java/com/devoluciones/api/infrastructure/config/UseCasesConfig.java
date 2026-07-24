@@ -3,6 +3,8 @@ package com.devoluciones.api.infrastructure.config;
 import com.devoluciones.api.core.domain.port.CargaMasivaRepositoryPort;
 import com.devoluciones.api.core.domain.port.FolioGeneratorPort;
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
+import com.devoluciones.api.core.domain.port.UsuarioRepositoryPort;
+import com.devoluciones.api.core.usecase.auth.AutenticarUsuarioUseCase;
 import com.devoluciones.api.core.usecase.cargas.ProcesarCargaMasivaUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.ConsultarSolicitudesUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarSolicitudesBorradorUseCase;
@@ -11,10 +13,19 @@ import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesFinale
 import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesRevisionUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 @Configuration
 public class UseCasesConfig {
+
+    @Bean
+    @Transactional(readOnly = true)
+    public AutenticarUsuarioUseCase autenticarUsuarioUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
+            PasswordEncoder passwordEncoder) {
+        return new AutenticarUsuarioUseCase(usuarioRepositoryPort, passwordEncoder);
+    }
 
     @Bean
     @Transactional

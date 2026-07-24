@@ -48,6 +48,21 @@ public class ExceptionHandlerController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarCredencialesInvalidas(
+            org.springframework.security.authentication.BadCredentialsException ex, HttpServletRequest request) {
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                LocalDateTime.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "Credenciales Inválidas",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
     @ExceptionHandler(TransicionInvalidaException.class)
     public ResponseEntity<ErrorResponseDTO> manejarTransicionInvalida(
             TransicionInvalidaException ex, HttpServletRequest request) {
@@ -91,6 +106,21 @@ public class ExceptionHandlerController {
                 HttpStatus.BAD_REQUEST.value(),
                 "Error de Validación de Entrada",
                 detalles,
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarNullPointerException(
+            NullPointerException ex, HttpServletRequest request) {
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Error de Solicitud",
+                "No fue posible identificar o procesar un recurso o valor requerido.",
                 request.getRequestURI()
         );
 

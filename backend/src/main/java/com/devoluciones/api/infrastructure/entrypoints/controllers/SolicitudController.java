@@ -1,11 +1,14 @@
 package com.devoluciones.api.infrastructure.entrypoints.controllers;
 
+import com.devoluciones.api.core.domain.exceptions.ReglaNegocioException;
 import com.devoluciones.api.core.domain.models.EventoSolicitud;
 import com.devoluciones.api.core.domain.models.Solicitud;
+import com.devoluciones.api.core.domain.models.Usuario;
 import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.models.enums.OrigenSolicitud;
 import com.devoluciones.api.core.domain.models.pagination.PaginaResultado;
 import com.devoluciones.api.core.domain.models.pagination.SolicitudFiltro;
+import com.devoluciones.api.core.domain.port.UsuarioRepositoryPort;
 import com.devoluciones.api.core.usecase.solicitudes.ConsultarSolicitudesUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarSolicitudesBorradorUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesBorradorUseCase;
@@ -15,10 +18,15 @@ import com.devoluciones.api.infrastructure.entrypoints.dto.request.AccionSolicit
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.RechazarSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.SolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.response.EventoSolicitudResponseDTO;
-import com.devoluciones.api.infrastructure.entrypoints.dto.response.SolicitudResponseDTO;
+import com.devoluciones.api.infrastructure.entrypoints.dto.response.solicitudes.SolicitudBaseDto;
+import com.devoluciones.api.infrastructure.entrypoints.dto.response.solicitudes.SolicitudResponseDTO;
+import com.devoluciones.api.infrastructure.entrypoints.dto.response.usuario.UsuarioDTO;
+
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,23 +50,28 @@ public class SolicitudController {
     private final GestionarTransicionesRevisionUseCase gestionarTransicionesRevisionUseCase;
     private final GestionarTransicionesFinalesUseCase gestionarTransicionesFinalesUseCase;
     private final ConsultarSolicitudesUseCase consultarSolicitudesUseCase;
+    private final UsuarioRepositoryPort usuarioRepositoryPort;
 
     public SolicitudController(
             GestionarSolicitudesBorradorUseCase gestionarSolicitudesBorradorUseCase,
             GestionarTransicionesBorradorUseCase gestionarTransicionesBorradorUseCase,
             GestionarTransicionesRevisionUseCase gestionarTransicionesRevisionUseCase,
             GestionarTransicionesFinalesUseCase gestionarTransicionesFinalesUseCase,
-            ConsultarSolicitudesUseCase consultarSolicitudesUseCase) {
+            ConsultarSolicitudesUseCase consultarSolicitudesUseCase,
+            UsuarioRepositoryPort usuarioRepositoryPort) {
         this.gestionarSolicitudesBorradorUseCase = gestionarSolicitudesBorradorUseCase;
         this.gestionarTransicionesBorradorUseCase = gestionarTransicionesBorradorUseCase;
         this.gestionarTransicionesRevisionUseCase = gestionarTransicionesRevisionUseCase;
         this.gestionarTransicionesFinalesUseCase = gestionarTransicionesFinalesUseCase;
         this.consultarSolicitudesUseCase = consultarSolicitudesUseCase;
+        this.usuarioRepositoryPort = usuarioRepositoryPort;
     }
 
     @PostMapping
-    public ResponseEntity<SolicitudResponseDTO> crearSolicitud(
+    public ResponseEntity<SolicitudBaseDto> crearSolicitud(
             @Valid @RequestBody SolicitudRequestDTO request) {
+
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
 
         Solicitud solicitudInput = Solicitud.builder()
                 .rutCliente(request.rutCliente())
@@ -67,11 +80,11 @@ public class SolicitudController {
                 .bancoDestino(request.bancoDestino())
                 .cuentaDestino(request.cuentaDestino())
                 .referenciaBanco(request.referenciaBanco())
-                .creadaPor(request.usuario().username())
+                .creadaPor(usuarioAutenticado.getUsername())
                 .build();
 
         Solicitud creada = gestionarSolicitudesBorradorUseCase.crear(solicitudInput);
-        SolicitudResponseDTO responseDTO = aResponseDTO(creada);
+        SolicitudBaseDto responseDTO = aSolicitudBaseDto(creada, usuarioAutenticado);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -82,9 +95,11 @@ public class SolicitudController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SolicitudResponseDTO> actualizarSolicitud(
+    public ResponseEntity<SolicitudBaseDto> actualizarSolicitud(
             @PathVariable Long id,
             @Valid @RequestBody SolicitudRequestDTO request) {
+
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
 
         Solicitud datosModificados = Solicitud.builder()
                 .rutCliente(request.rutCliente())
@@ -95,76 +110,94 @@ public class SolicitudController {
                 .referenciaBanco(request.referenciaBanco())
                 .build();
 
-        Solicitud actualizada = gestionarSolicitudesBorradorUseCase.actualizar(id, datosModificados, request.usuario().username());
-        SolicitudResponseDTO responseDTO = aResponseDTO(actualizada);
+        Solicitud actualizada = gestionarSolicitudesBorradorUseCase.actualizar(
+                id, datosModificados, usuarioAutenticado.getUsername()
+        );
 
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(aSolicitudBaseDto(actualizada, usuarioAutenticado));
     }
 
     @PostMapping("/{id}/enviar")
-    public ResponseEntity<SolicitudResponseDTO> enviarARevision(
+    public ResponseEntity<SolicitudBaseDto> enviarARevision(
             @PathVariable Long id,
-            @Valid @RequestBody AccionSolicitudRequestDTO request) {
+            @RequestBody(required = false) AccionSolicitudRequestDTO request) {
+
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        String comentario = request != null ? request.comentario() : null;
 
         Solicitud enviada = gestionarTransicionesBorradorUseCase.enviarARevision(
-                id, request.usuario().username(), request.comentario()
+                id, usuarioAutenticado.getUsername(), comentario
         );
-        return ResponseEntity.ok(aResponseDTO(enviada));
+        return ResponseEntity.ok(aSolicitudBaseDto(enviada, usuarioAutenticado));
     }
 
     @PostMapping("/{id}/anular")
-    public ResponseEntity<SolicitudResponseDTO> anular(
+    public ResponseEntity<SolicitudBaseDto> anular(
             @PathVariable Long id,
-            @Valid @RequestBody AccionSolicitudRequestDTO request) {
+            @RequestBody(required = false) AccionSolicitudRequestDTO request) {
+
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        String comentario = request != null ? request.comentario() : null;
 
         Solicitud anulada = gestionarTransicionesBorradorUseCase.anular(
-                id, request.usuario().username(), request.comentario()
+                id, usuarioAutenticado.getUsername(), comentario
         );
-        return ResponseEntity.ok(aResponseDTO(anulada));
+        return ResponseEntity.ok(aSolicitudBaseDto(anulada, usuarioAutenticado));
     }
 
     @PostMapping("/{id}/aprobar")
-    public ResponseEntity<SolicitudResponseDTO> aprobar(
+    public ResponseEntity<SolicitudBaseDto> aprobar(
             @PathVariable Long id,
-            @Valid @RequestBody AccionSolicitudRequestDTO request) {
+            @RequestBody(required = false) AccionSolicitudRequestDTO request) {
+
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        String comentario = request != null ? request.comentario() : null;
 
         Solicitud aprobada = gestionarTransicionesRevisionUseCase.aprobar(
-                id, request.usuario(), request.comentario()
+                id, usuarioAutenticado, comentario
         );
-        return ResponseEntity.ok(aResponseDTO(aprobada));
+        return ResponseEntity.ok(aSolicitudBaseDto(aprobada, usuarioAutenticado));
     }
 
     @PostMapping("/{id}/rechazar")
-    public ResponseEntity<SolicitudResponseDTO> rechazar(
+    public ResponseEntity<SolicitudBaseDto> rechazar(
             @PathVariable Long id,
             @Valid @RequestBody RechazarSolicitudRequestDTO request) {
 
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+
         Solicitud rechazada = gestionarTransicionesRevisionUseCase.rechazar(
-                id, request.usuario(), request.motivoRechazo(), request.comentario()
+                id, usuarioAutenticado, request.motivoRechazo(), request.comentario()
         );
-        return ResponseEntity.ok(aResponseDTO(rechazada));
+        return ResponseEntity.ok(aSolicitudBaseDto(rechazada, usuarioAutenticado));
     }
 
     @PostMapping("/{id}/pagar")
-    public ResponseEntity<SolicitudResponseDTO> pagar(
+    public ResponseEntity<SolicitudBaseDto> pagar(
             @PathVariable Long id,
-            @Valid @RequestBody AccionSolicitudRequestDTO request) {
+            @RequestBody(required = false) AccionSolicitudRequestDTO request) {
+
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        String comentario = request != null ? request.comentario() : null;
 
         Solicitud pagada = gestionarTransicionesFinalesUseCase.pagar(
-                id, request.usuario(), request.comentario()
+                id, usuarioAutenticado, comentario
         );
-        return ResponseEntity.ok(aResponseDTO(pagada));
+        return ResponseEntity.ok(aSolicitudBaseDto(pagada, usuarioAutenticado));
     }
 
     @PostMapping("/{id}/reabrir")
-    public ResponseEntity<SolicitudResponseDTO> reabrir(
+    public ResponseEntity<SolicitudBaseDto> reabrir(
             @PathVariable Long id,
-            @Valid @RequestBody AccionSolicitudRequestDTO request) {
+            @RequestBody(required = false) AccionSolicitudRequestDTO request) {
+
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        String comentario = request != null ? request.comentario() : null;
 
         Solicitud reabierta = gestionarTransicionesFinalesUseCase.reabrir(
-                id, request.usuario(), request.comentario()
+                id, usuarioAutenticado, comentario
         );
-        return ResponseEntity.ok(aResponseDTO(reabierta));
+        return ResponseEntity.ok(aSolicitudBaseDto(reabierta, usuarioAutenticado));
     }
 
     @GetMapping
@@ -177,6 +210,7 @@ public class SolicitudController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
+
         SolicitudFiltro filtro = SolicitudFiltro.builder()
                 .estado(estado)
                 .rutCliente(rut)
@@ -188,7 +222,7 @@ public class SolicitudController {
         PaginaResultado<Solicitud> resultadoDominio = consultarSolicitudesUseCase.listarConFiltros(filtro, page, size);
 
         List<SolicitudResponseDTO> dtosContent = resultadoDominio.getContenido().stream()
-                .map(this::aResponseDTO)
+                .map(s -> aResponseDTO(s))
                 .toList();
 
         PaginaResultado<SolicitudResponseDTO> paginaResponse = new PaginaResultado<>(
@@ -203,10 +237,10 @@ public class SolicitudController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SolicitudResponseDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<SolicitudBaseDto> obtenerPorId(@PathVariable Long id) {
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
         Solicitud solicitud = consultarSolicitudesUseCase.obtenerPorId(id);
-        SolicitudResponseDTO responseDTO = aResponseDTO(solicitud);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(aSolicitudBaseDto(solicitud, usuarioAutenticado));
     }
 
     @GetMapping("/{id}/historial")
@@ -219,7 +253,23 @@ public class SolicitudController {
         return ResponseEntity.ok(dtos);
     }
 
-    private SolicitudResponseDTO aResponseDTO(Solicitud s) {
+    private Usuario obtenerUsuarioAutenticado() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        return usuarioRepositoryPort.buscarPorUsername(username)
+                .orElseThrow(() -> new ReglaNegocioException(
+                        "No se encontró el usuario que está realizando la solicitud (" + username + "). Debe autenticarse nuevamente."
+                ));
+    }
+
+    private SolicitudBaseDto aSolicitudBaseDto(Solicitud s, Usuario u) {
+        SolicitudResponseDTO solicitudDTO = aResponseDTO(s);
+        UsuarioDTO usuarioDTO = new UsuarioDTO(u.getUsername(), u.getRol(), u.getMail());
+        return new SolicitudBaseDto(solicitudDTO, usuarioDTO);
+    }
+
+    public SolicitudResponseDTO aResponseDTO(Solicitud s) {
         return new SolicitudResponseDTO(
                 s.getId(),
                 s.getFolio(),

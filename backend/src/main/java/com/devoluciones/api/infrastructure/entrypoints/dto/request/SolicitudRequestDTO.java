@@ -1,7 +1,6 @@
 package com.devoluciones.api.infrastructure.entrypoints.dto.request;
 
 import com.devoluciones.api.infrastructure.entrypoints.validation.ValidRut;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -34,10 +33,6 @@ public record SolicitudRequestDTO(
         String cuentaDestino,
 
         @NotBlank(message = "La referencia del banco es obligatoria")
-        String referenciaBanco,
-
-        @NotNull(message = "El usuario que realiza la operación es obligatorio")
-        @Valid
-        UsuarioAutenticadoDto usuario
+        String referenciaBanco
 ) {
 }

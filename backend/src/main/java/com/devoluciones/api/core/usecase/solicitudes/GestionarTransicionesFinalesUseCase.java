@@ -1,13 +1,12 @@
 package com.devoluciones.api.core.usecase.solicitudes;
 
-import com.devoluciones.api.core.domain.exceptions.AccesoDenegadoException;
 import com.devoluciones.api.core.domain.exceptions.RecursoNoEncontradoException;
 import com.devoluciones.api.core.domain.exceptions.TransicionInvalidaException;
 import com.devoluciones.api.core.domain.models.EventoSolicitud;
 import com.devoluciones.api.core.domain.models.Solicitud;
+import com.devoluciones.api.core.domain.models.Usuario;
 import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
-import com.devoluciones.api.infrastructure.entrypoints.dto.request.UsuarioAutenticadoDto;
 
 import java.time.LocalDateTime;
 
@@ -22,33 +21,30 @@ public class GestionarTransicionesFinalesUseCase {
         this.solicitudRepository = solicitudRepository;
     }
 
-    public Solicitud pagar(Long id, UsuarioAutenticadoDto usuarioInput, String comentario) {
-        // 1. Validar Rol SUPERVISOR (Regla R2 -> HTTP 403 Forbidden)
-        validarRolSupervisor(usuarioInput, "pagar una solicitud");
-
-        // 2. Buscar la solicitud existente
+    public Solicitud pagar(Long id, Usuario usuario, String comentario) {
+        // 1. Buscar la solicitud existente
         Solicitud solicitud = buscarSolicitudExistente(id);
 
         EstadoSolicitud estadoOrigen = solicitud.getEstado();
 
-        // 3. Cambiar estado usando Máquina de Estados del Dominio (Regla R1 -> HTTP 409 Conflict si no es APROBADA)
+        // 2. Cambiar estado usando Máquina de Estados del Dominio (Regla R1 -> HTTP 409 Conflict si no es APROBADA)
         solicitud.cambiarEstado(EstadoSolicitud.PAGADA);
-        solicitud.setActualizadaPor(usuarioInput.username());
+        solicitud.setActualizadaPor(usuario.getUsername());
         solicitud.setFechaActualizacion(LocalDateTime.now());
 
-        // 4. Guardar la solicitud pagada
+        // 3. Guardar la solicitud pagada
         Solicitud guardada = solicitudRepository.guardar(solicitud);
 
-        // 5. Registrar evento de auditoría en la misma transacción (Regla R6)
+        // 4. Registrar evento de auditoría en la misma transacción (Regla R6)
         String comentarioFinal = (comentario != null && !comentario.isBlank())
                 ? comentario.trim()
-                : "Solicitud pagada por el supervisor " + usuarioInput.username();
+                : "Solicitud pagada por el supervisor " + usuario.getUsername();
 
         EventoSolicitud evento = EventoSolicitud.builder()
                 .solicitudId(guardada.getId())
                 .estadoOrigen(estadoOrigen)
                 .estadoDestino(EstadoSolicitud.PAGADA)
-                .usuario(usuarioInput.username())
+                .usuario(usuario.getUsername())
                 .fecha(LocalDateTime.now())
                 .comentario(comentarioFinal)
                 .build();
@@ -58,7 +54,7 @@ public class GestionarTransicionesFinalesUseCase {
         return guardada;
     }
 
-    public Solicitud reabrir(Long id, UsuarioAutenticadoDto usuarioInput, String comentario) {
+    public Solicitud reabrir(Long id, Usuario usuario, String comentario) {
         // 1. Buscar la solicitud existente
         Solicitud solicitud = buscarSolicitudExistente(id);
 
@@ -74,7 +70,7 @@ public class GestionarTransicionesFinalesUseCase {
         // 3. Cambiar estado usando Máquina de Estados del Dominio (Regla R1 -> HTTP 409 Conflict si no es RECHAZADA)
         solicitud.cambiarEstado(EstadoSolicitud.BORRADOR);
         solicitud.setVecesReabierta((solicitud.getVecesReabierta() == null ? 0 : solicitud.getVecesReabierta()) + 1);
-        solicitud.setActualizadaPor(usuarioInput.username());
+        solicitud.setActualizadaPor(usuario.getUsername());
         solicitud.setFechaActualizacion(LocalDateTime.now());
 
         // 4. Guardar la solicitud reabierta
@@ -83,13 +79,13 @@ public class GestionarTransicionesFinalesUseCase {
         // 5. Registrar evento de auditoría en la misma transacción (Regla R6)
         String comentarioFinal = (comentario != null && !comentario.isBlank())
                 ? comentario.trim()
-                : "Solicitud reabierta a BORRADOR por el usuario " + usuarioInput.username();
+                : "Solicitud reabierta a BORRADOR por el usuario " + usuario.getUsername();
 
         EventoSolicitud evento = EventoSolicitud.builder()
                 .solicitudId(guardada.getId())
                 .estadoOrigen(estadoOrigen)
                 .estadoDestino(EstadoSolicitud.BORRADOR)
-                .usuario(usuarioInput.username())
+                .usuario(usuario.getUsername())
                 .fecha(LocalDateTime.now())
                 .comentario(comentarioFinal)
                 .build();
@@ -97,12 +93,6 @@ public class GestionarTransicionesFinalesUseCase {
         solicitudRepository.registrarEvento(evento);
 
         return guardada;
-    }
-
-    private void validarRolSupervisor(UsuarioAutenticadoDto usuarioInput, String accion) {
-        if (usuarioInput == null || usuarioInput.rol() == null || !"SUPERVISOR".equalsIgnoreCase(usuarioInput.rol())) {
-            throw new AccesoDenegadoException("Acceso denegado: Se requiere rol SUPERVISOR para " + accion + ".");
-        }
     }
 
     private Solicitud buscarSolicitudExistente(Long id) {

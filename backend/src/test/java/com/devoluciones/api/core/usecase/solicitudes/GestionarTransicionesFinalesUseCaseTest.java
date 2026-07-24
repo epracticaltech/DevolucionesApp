@@ -1,11 +1,10 @@
 package com.devoluciones.api.core.usecase.solicitudes;
 
-import com.devoluciones.api.core.domain.exceptions.AccesoDenegadoException;
 import com.devoluciones.api.core.domain.exceptions.TransicionInvalidaException;
 import com.devoluciones.api.core.domain.models.Solicitud;
+import com.devoluciones.api.core.domain.models.Usuario;
 import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
-import com.devoluciones.api.infrastructure.entrypoints.dto.request.UsuarioAutenticadoDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,8 +20,19 @@ class GestionarTransicionesFinalesUseCaseTest {
     private SolicitudRepositoryPort solicitudRepository;
     private GestionarTransicionesFinalesUseCase useCase;
 
-    private final UsuarioAutenticadoDto supervisor = new UsuarioAutenticadoDto("supervisor1", "SUPERVISOR");
-    private final UsuarioAutenticadoDto analista = new UsuarioAutenticadoDto("analista1", "ANALISTA");
+    private final Usuario supervisor = Usuario.builder()
+            .id(1L)
+            .username("supervisor1")
+            .rol("SUPERVISOR")
+            .mail("supervisor1@devoluciones.cl")
+            .build();
+
+    private final Usuario analista = Usuario.builder()
+            .id(2L)
+            .username("analista1")
+            .rol("ANALISTA")
+            .mail("analista1@devoluciones.cl")
+            .build();
 
     @BeforeEach
     void setUp() {
@@ -31,7 +41,7 @@ class GestionarTransicionesFinalesUseCaseTest {
     }
 
     @Test
-    @DisplayName("Pagar solicitud en estado APROBADA con rol SUPERVISOR transiciona a PAGADA y guarda evento")
+    @DisplayName("Pagar solicitud en estado APROBADA transiciona a PAGADA y guarda evento")
     void pagarExito() {
         Long id = 1L;
         Solicitud solicitud = Solicitud.builder()
@@ -50,15 +60,6 @@ class GestionarTransicionesFinalesUseCaseTest {
 
         Mockito.verify(solicitudRepository, Mockito.times(1)).guardar(any());
         Mockito.verify(solicitudRepository, Mockito.times(1)).registrarEvento(any());
-    }
-
-    @Test
-    @DisplayName("R2: Pagar solicitud con rol ANALISTA lanza AccesoDenegadoException (HTTP 403)")
-    void pagarRolAnalistaLanzaExcepcion403() {
-        Long id = 1L;
-
-        assertThrows(AccesoDenegadoException.class, () -> useCase.pagar(id, analista, "Intentando pagar como analista"));
-        Mockito.verify(solicitudRepository, Mockito.never()).guardar(any());
     }
 
     @Test
@@ -107,7 +108,7 @@ class GestionarTransicionesFinalesUseCaseTest {
         Solicitud solicitud = Solicitud.builder()
                 .id(id)
                 .estado(EstadoSolicitud.RECHAZADA)
-                .vecesReabierta(1) // Ya fue reabierta 1 vez
+                .vecesReabierta(1)
                 .build();
 
         Mockito.when(solicitudRepository.buscarPorId(id)).thenReturn(Optional.of(solicitud));
