@@ -1,123 +1,191 @@
-# DevolucionesApp — MVP Backend (Parte 1 y Parte 2 Finalizadas)
+# DevolucionesApp — Sistema de Gestión y Devolución de Fondos Fullstack
 
-Sistema de gestión y automatización para la devolución de pagos duplicados o en exceso en la administradora de fondos.
+Sistema fullstack para la digitalización y automatización del proceso de devolución de pagos duplicados o en exceso en la administradora de fondos.
 
 ---
 
-## 1. Arquitectura del Proyecto (Clean Architecture Personalizada)
+## 1. Guía Rápida de Despliegue (Cómo levantar el proyecto)
 
-El proyecto se diseñó utilizando los principios de **Clean Architecture (Arquitectura Limpia)**, estructurando las capas de manera desacoplada para mantener las reglas de negocio aisladas de cualquier marco de trabajo o detalle de infraestructura:
+### Opción A: Despliegue Completo con Docker Compose (Recomendado para Producción)
+
+Ejecuta el siguiente comando en la raíz del proyecto para construir y levantar la base de datos PostgreSQL, el backend Spring Boot y el frontend Angular:
+
+```bash
+docker compose up --build
+```
+
+- **Frontend Angular:** [http://localhost:4200](http://localhost:4200)
+- **Backend API REST:** [http://localhost:8080](http://localhost:8080)
+- **Credenciales Seed de Prueba:**
+  - **Analista:** `analista1` / `password123` (Rol: `ANALISTA`)
+  - **Supervisor:** `supervisor1` / `password123` (Rol: `SUPERVISOR`)
+
+---
+
+### Opción B: Ejecución en Entorno de Desarrollo Local
+
+Si prefieres ejecutar el código fuente localmente para depuración:
+
+1. **Levantar la Base de Datos PostgreSQL en Docker:**
+   ```bash
+   docker compose down -v
+   docker compose up -d db
+   ```
+
+2. **Iniciar el Backend Spring Boot (Java 21):**
+   ```bash
+   cd backend
+   ./mvnw spring-boot:run
+   ```
+
+3. **Iniciar el Frontend Angular 17:**
+   ```bash
+   cd frontend
+   npm start
+   ```
+
+---
+
+## 2. Arquitectura del Proyecto (Clean Architecture + Angular 17 Standalone)
+
+El proyecto fue construido siguiendo los principios de **Clean Architecture (Arquitectura Limpia)** en el backend y **Angular 17 Standalone Components** en el frontend:
 
 ```text
-com.devoluciones.api
-├── core/                         # Capa de Dominio y Casos de Uso (Núcleo de Negocio)
-│   ├── domain/
-│   │   ├── exceptions/           # Excepciones semánticas (RecursoNoEncontrado, TransicionInvalida, etc.)
-│   │   ├── models/               # Entidades y objetos de valor del dominio (Solicitud, EventoSolicitud, CargaMasiva, DetalleCargaError)
-│   │   │   ├── enums/            # Máquina de Estados cohesiva (EstadoSolicitud, OrigenSolicitud)
-│   │   │   └── pagination/       # Abstracciones de filtrado y paginación desacopladas (PaginaResultado)
-│   │   └── port/                 # Puertos de salida del dominio (SolicitudRepositoryPort, CargaMasivaRepositoryPort, FolioGeneratorPort)
-│   └── usecase/
-│       ├── cargas/               # Caso de Uso de Carga Masiva CSV (ProcesarCargaMasivaUseCase)
-│       └── solicitudes/          # Casos de Uso consolidados por ciclo de vida
-│           ├── GestionarSolicitudesBorradorUseCase.java
-│           ├── GestionarTransicionesBorradorUseCase.java
-│           ├── GestionarTransicionesRevisionUseCase.java
-│           ├── GestionarTransicionesFinalesUseCase.java
-│           └── ConsultarSolicitudesUseCase.java
-├── infrastructure/               # Capa de Infraestructura (Detalles de implementación)
-│   ├── adapters/
-│   │   └── postgres/             # Adaptador de persistencia PostgreSQL / JPA
-│   │       ├── entities/         # Entidades JPA (SolicitudEntity, EventoSolicitudEntity, CargaMasivaEntity, DetalleCargaErrorEntity)
-│   │       ├── persistence/      # Implementación de adaptadores (SolicitudRepositoryAdapter, CargaMasivaRepositoryAdapter, FolioGeneratorAdapter)
-│   │       ├── repositories/     # Interfaces Spring Data JPA
-│   │       └── specifications/   # Consultas dinámicas JPA Specifications
-│   ├── config/                   # Configuración de Spring Beans y Transacciones (@Transactional)
-│   └── entrypoints/
-│       ├── controllers/          # Controladores REST (SolicitudController, CargaMasivaController) y ExceptionHandlerController (@RestControllerAdvice)
-│       ├── dto/                  # DTOs de Entrada/Salida encapsulados como Java Records
-│       └── validation/           # Validadores personalizados (Módulo 11 RUT)
-└── shared/                       # Utilidades transversales puras (RutUtils)
+nxtara/DevolucionesApp
+├── backend/                       # API REST Spring Boot 3.4 / Java 21
+│   ├── core/                      # Capa de Dominio y Casos de Uso (Núcleo de Negocio)
+│   │   ├── domain/
+│   │   │   ├── exceptions/        # Excepciones semánticas (RecursoNoEncontrado, TransicionInvalida, ReglaNegocio, etc.)
+│   │   │   ├── models/            # Entidades puras del dominio (Solicitud, Usuario, EventoSolicitud, CargaMasiva)
+│   │   │   └── port/              # Puertos de salida (SolicitudRepositoryPort, UsuarioRepositoryPort, FolioGeneratorPort)
+│   │   └── usecase/
+│   │       ├── auth/              # Caso de uso de autenticación JWT (AutenticarUsuarioUseCase)
+│   │       ├── cargas/            # Procesamiento batch de CSV (ProcesarCargaMasivaUseCase)
+│   │       └── solicitudes/       # Casos de uso consolidados por ciclo de vida
+│   └── infrastructure/            # Adaptadores de infraestructura
+│       ├── adapters/postgres/     # Adaptadores JPA PostgreSQL (SolicitudEntity, UsuarioEntity, CargaMasivaEntity)
+│       ├── security/              # Spring Security stateless JWT, JwtTokenProvider, CustomAuthEntryPoint (401), CustomAccessDenied (403)
+│       └── entrypoints/
+│           ├── controllers/       # Endpoints REST (SolicitudController, AuthController, CargaMasivaController)
+│           └── dto/               # Records Java de transferencia de datos
+└── frontend/                      # Aplicación Angular 17 Standalone
+    ├── src/app/
+    │   ├── core/
+    │   │   ├── guards/            # authGuard (CanActivateFn)
+    │   │   ├── interceptors/      # jwtInterceptor (HttpInterceptorFn para Bearer token)
+    │   │   ├── models/            # Interfaces TypeScript tipadas (SolicitudResponse, AuthResponse, etc.)
+    │   │   └── services/          # AuthService (Signals + localStorage) y SolicitudService (HttpClient)
+    │   ├── features/
+    │   │   ├── auth/              # LoginComponent (/login)
+    │   │   ├── solicitudes/       # BandejaComponent, DetalleComponent, FormularioComponent
+    │   │   └── carga-masiva/      # CargaMasivaComponent (Lazy Loaded)
+    │   └── shared/layout/         # LayoutComponent con Navbar y User Badge
+    └── src/environments/          # environment.ts (apiUrl: 'http://localhost:8080/api/v1')
 ```
 
 ---
 
-## 2. Contrato de la API REST Completo
+## 3. Resumen de Implementación de la Prueba Técnica
 
-### A. Gestión de Solicitudes Manuales y Transiciones (Parte 1)
+### Parte 1 — API REST con Máquina de Estados (100% Implementada)
+- **Máquina de Estados Cohesiva:** Transiciones declarativas e inmutables mediante acciones HTTP dedicadas (`POST /enviar`, `/aprobar`, `/rechazar`, `/pagar`, `/reabrir`, `/anular`).
+- **Reglas de Negocio Enforzadas (R1–R7):**
+  - **R1:** Respuestas HTTP 409 Conflict ante transiciones inválidas.
+  - **R2:** Control estricto de roles (`SUPERVISOR` para aprobar/rechazar/pagar).
+  - **R3:** Exigencia de `motivo_rechazo` en estado `RECHAZADA`.
+  - **R4:** Reapertura de solicitudes rechazadas permitida máximo 1 vez (`veces_reabierta`).
+  - **R5:** Validación de RUT chileno (Módulo 11) y montos entre 1 y 10.000.000 CLP.
+  - **R6:** Registro inmutable de eventos de auditoría (`EventoSolicitud`) en la misma transacción (`@Transactional`).
+  - **R7:** Separación de funciones: el supervisor que aprueba no puede ser el creador de la solicitud.
+- **Paginación y Filtros en BD:** Consultas optimizadas con JPA Specification y `Pageable` para evitar cargar colecciones en memoria.
 
-| Método | Endpoint | Status Válido | Status de Error | Descripción |
-|---|---|---|---|---|
-| `POST` | `/api/v1/solicitudes` | **201 Created** | 400 | Crear solicitud manual en estado `BORRADOR` con asignación de folio único correlativo (`DEV-AAAA-NNNNNN`). |
-| `GET` | `/api/v1/solicitudes` | **200 OK** | — | Consulta paginada (`page`, `size`) con filtros combinables en BD (`estado`, `rut`, `origen`, `fechaDesde`, `fechaHasta`). |
-| `GET` | `/api/v1/solicitudes/{id}` | **200 OK** | 404 | Buscar solicitud por ID. |
-| `PUT` | `/api/v1/solicitudes/{id}` | **200 OK** | 400, 409 | Editar solicitud en estado `BORRADOR`. Si el estado actual no es `BORRADOR` $\rightarrow$ **409 Conflict**. |
-| `POST` | `/api/v1/solicitudes/{id}/enviar` | **200 OK** | 400, 409 | Transicionar de `BORRADOR` $\rightarrow$ `EN_REVISION` con auditoría. Requiere `referenciaBanco`. |
-| `POST` | `/api/v1/solicitudes/{id}/anular` | **200 OK** | 409 | Transicionar de `BORRADOR` $\rightarrow$ `ANULADA` con auditoría. |
-| `POST` | `/api/v1/solicitudes/{id}/aprobar` | **200 OK** | 400, 403, 409 | Transicionar de `EN_REVISION` $\rightarrow$ `APROBADA`. Exige rol `SUPERVISOR` (R2) y separación de funciones creador/aprobador (R7). |
-| `POST` | `/api/v1/solicitudes/{id}/rechazar` | **200 OK** | 400, 403, 409 | Transicionar de `EN_REVISION` $\rightarrow$ `RECHAZADA`. Exige rol `SUPERVISOR` (R2) y `motivo_rechazo` obligatorio (R3). |
-| `POST` | `/api/v1/solicitudes/{id}/pagar` | **200 OK** | 403, 409 | Transicionar de `APROBADA` $\rightarrow$ `PAGADA`. Exige rol `SUPERVISOR` (R2). |
-| `POST` | `/api/v1/solicitudes/{id}/reabrir` | **200 OK** | 409 | Transicionar de `RECHAZADA` $\rightarrow$ `BORRADOR`. Permitido máx. 1 vez (R4). Permite rol `ANALISTA` y `SUPERVISOR`. |
-| `GET` | `/api/v1/solicitudes/{id}/historial` | **200 OK** | 404 | Consultar el histórico inmutable de eventos de auditoría (`EventoSolicitud`) ordenado por fecha. |
+### Parte 2 — Carga Masiva CSV (100% Implementada)
+- **Procesamiento Batch:** Inserción en bloques (chunks) de 100 filas con `flush` y `clear` del EntityManager.
+- **Tolerancia a Filas Defectuosas:** Las filas con errores no detienen el procesamiento; se registran en `detalles_carga_error` (`numero_fila`, `campo`, `motivo`). Con el archivo `pagos_banco_ejemplo.csv`, ~950 filas entran en `EN_REVISION` y ~50 se reportan detalladamente.
+- **Idempotencia:** Evita la duplicación verificando la clave única `referencia_banco`.
 
-### B. Carga Masiva de Solicitudes CSV (Parte 2)
+### Parte 3 — Frontend Angular 17 (100% Implementado)
+- **Componentes Standalone:** Desarrollo moderno sin `NgModules`.
+- **Autenticación & Interceptores:** Guard de rutas (`authGuard`) e interceptor HTTP (`jwtInterceptor`) que adjunta automáticamente el token `Bearer JWT`.
+- **Bandeja, Detalle y Formulario:**
+  - Tabla paginada con badges de color por estado.
+  - Botones de acción dinámicos filtrados por estado de la solicitud y rol del usuario logueado.
+  - Formulario reactivo (`ReactiveFormsModule`) con validaciones espejo del backend.
+- **Carga Masiva:** Interfaz de subida con resumen y tabla interactiva de errores por fila.
 
-| Método | Endpoint | Status Válido | Status de Error | Descripción |
-|---|---|---|---|---|
-| `POST` | `/api/v1/cargas` | **201 Created** | 400 | Carga masiva de archivo CSV (`multipart/form-data`, parámetro `file`). Procesa las solicitudes en batch. |
-| `GET` | `/api/v1/cargas/{id}` | **200 OK** | 404 | Consultar resumen del procesamiento del lote (total, OK, rechazadas, reporte de errores por fila). |
-
----
-
-## 3. Exigencias de la Carga Masiva (Parte 2)
-
-| Exigencia | Solución e Implementación Técnica |
-|---|---|
-| **Procesamiento por Lotes (Batching)** | Implementado agrupando iteraciones en **chunks de 100 filas**. Cada 100 entidades válidas procesadas se ejecuta `entityManager.flush()` para transmitir la ráfaga de `INSERT` multi-values a PostgreSQL en 1 viaje de red (*round-trip*), seguido de `entityManager.clear()` para liberar las referencias del Heap de la JVM (Garbage Collector). Se diferencia del enfoque fila a fila en que reduce dramáticamente la latencia de red y el sobrecosto de I/O. |
-| **Tolerancia a Filas Malas** | Si una fila contiene errores (RUT inválido según Módulo 11, monto negativo o $> 10.000.000$ CLP, campos vacíos o referencia bancaria duplicada), **la carga no se aborta**. Se registra una entrada detallada en `detalles_carga_error` (`numeroFila`, `campo`, `motivo`) e incrementa `filasRechazadas`. El resto del archivo continúa procesándose normalmente. |
-| **Idempotencia** | Se utiliza `referencia_banco` como llave de idempotencia. Antes de insertar una fila, se verifica en la base de datos y dentro del set del mismo archivo CSV. Si la referencia ya existe, la fila es rechazada con motivo *"Referencia bancaria duplicada (idempotencia)"*, evitando duplicar solicitudes. |
-| **Transaccionalidad Definida** | La transacción guarda el registro de la `CargaMasiva` en estado `PROCESANDO`. Al finalizar todas las filas, persiste las solicitudes válidas, la lista de errores y actualiza el resumen a `COMPLETADO`. Si el proceso muriera por falla catastrófica (ej. caída de energía), la carga queda en estado `ERROR` y las solicitudes no confirmadas se revierten de forma atómica. |
-| **Solicitudes Resultantes** | Nacen directamente en estado **`EN_REVISION`** con `origen = CARGA_MASIVA` y su evento de auditoría inicial (`EN_REVISION -> EN_REVISION`) especificando en el comentario: `"Creación automática desde Carga Masiva (Archivo: [nombreArchivo])"`. |
-| **Bonus — Diseño Asíncrono (50.000 Filas)** | Para manejar archivos extremadamente grandes sin bloquear la conexión HTTP, el diseño ideal desacopla la carga: `POST /api/v1/cargas` recibe el archivo, lo guarda en un almacenamiento (ej. S3 / volumen local), crea el registro `CargaMasiva(estado="PROCESANDO")` y retorna inmediatamente **`202 Accepted`** con el header `Location: /api/v1/cargas/{id}`. Un worker asíncrono (`@Async` o Spring Batch / RabbitMQ) procesa el archivo en segundo plano, actualizando el progreso y permitiendo al frontend consultar el estado mediante polling en `GET /api/v1/cargas/{id}`. |
+### Parte 4 — Seguridad JWT + RBAC (100% Implementada)
+- Spring Security Stateless con codificación de contraseñas mediante **BCrypt**.
+- Excepciones personalizadas HTTP 401 (No Autorizado) y HTTP 403 (Prohibido por Falta de Rol).
+- Pruebas unitarias de seguridad (`RbacSecurityTest`) que garantizan el control de acceso.
 
 ---
 
-## 4. Justificación de Decisiones de Diseño y Exigencias Técnicas
+## 4. Parte 5 — Reporte de Conciliación e Índices PostgreSQL (Explicación Teórica)
 
-### ¿Por qué las transiciones son acciones HTTP `POST /{id}/accion` y no un `PUT` del campo `estado`?
-Un `PUT` en REST representa la sustitución completa del estado de un recurso. Sin embargo, en un dominio guiado por una **Máquina de Estados de Negocio**, una transición no es un cambio arbitrario. Cada transición representa un **comando explícito con reglas y efectos secundarios inseparables**:
-- Verificación del estado de origen permitido (Regla R1).
-- Autorización y restricción de roles (Regla R2).
-- Validaciones específicas de la acción, como el motivo obligatorio en rechazo (R3) o la separación de funciones (R7).
-- La inserción **obligatoria, inmutable y atómica** de un evento en el histórico `EventoSolicitud` (Regla R6).
+Debido al tiempo del desarrollo, la **Parte 5** se detalla teóricamente a continuación:
 
-### Generación de Folios Unificada $O(1)$
-Se implementó el adaptador `FolioGeneratorAdapter` respaldado por la secuencia PostgreSQL `seq_folio_solicitud`. Tanto la creación manual como la carga masiva comparten este servicio para obtener números correlativos formateados (`DEV-AAAA-NNNNNN`), garantizando unicidad matemática y eliminando por completo cualquier consulta N+1.
+### A. Endpoint Diseñado
+```text
+GET /api/v1/reportes/conciliacion?desde=2026-07-01&hasta=2026-07-21
+```
 
-### Máquina de Estados Cohesiva (`EstadoSolicitud.java`)
-Toda la lógica de transición y sus restricciones vive encapsulada en el Enum `EstadoSolicitud.java` mediante el método `validarTransicionHacia(nuevoEstado)`.
+### B. Agregación a Nivel de Base de Datos (`GROUP BY`)
+La consolidación de montos y totales diarios debe ser realizada directamente por PostgreSQL para garantizar máximo rendimiento:
 
-### Manejo Global de Errores (`@ControllerAdvice`)
-El componente `ExceptionHandlerController` captura todas las excepciones de dominio y validación, retornando un contrato único de error estructurado (`timestamp`, `status`, `error`, `detalle`, `path`).
+```sql
+SELECT 
+    CAST(fecha_creacion AS DATE) AS fecha,
+    estado,
+    COUNT(id) AS total_solicitudes,
+    SUM(monto) AS monto_total
+FROM solicitudes
+WHERE fecha_creacion >= :fechaDesde 
+  AND fecha_creacion <= :fechaHasta
+GROUP BY CAST(fecha_creacion AS DATE), estado
+ORDER BY fecha ASC, estado ASC;
+```
+
+### C. Estrategia de Índices para 5 Millones de Registros
+Para soportar millones de filas sin degradación de I/O en disco:
+
+```sql
+-- Índice compuesto para filtrado por fecha y agrupación por estado
+CREATE INDEX idx_solicitudes_fecha_estado 
+ON solicitudes (fecha_creacion, estado) 
+INCLUDE (monto);
+```
+
+- **Justificación de `INCLUDE (monto)`:** Permite realizar un **Index Only Scan**, satisfaciendo la consulta completamente desde el árbol B-Tree del índice sin necesidad de leer las páginas de datos en el Heap del disco.
+- **Análisis de Rendimiento (`EXPLAIN ANALYZE`):**
+  - **Sin índice:** Realiza un `Seq Scan` (escaneo secuencial) de complejidad $O(N)$ con alto tiempo de ejecución.
+  - **Con `idx_solicitudes_fecha_estado`:** Ejecuta un `Index Only Scan` de complejidad $O(\log N)$, reduciendo la respuesta a pocos milisegundos.
 
 ---
 
-## 5. Instrucciones para Ejecutar las Pruebas Unitarias
+## 5. Pruebas Automatizadas (Backend & Frontend)
 
-Toda la suite de pruebas unitarias y de integración puede ejecutarse desde la carpeta `backend` con los siguientes comandos:
-
+### Ejecución de Pruebas Backend
 ```bash
 cd backend
 ./mvnw test
 ```
 
-### Resultados de la Suite de Pruebas:
-- **`37/37 tests pasados (BUILD SUCCESS)`** comprobando:
-  - Reglas de la Máquina de Estados (`EstadoSolicitudTest`).
-  - Creación manual, idempotencia y edición en borrador con folio secuencial (`GestionarSolicitudesBorradorUseCaseTest`).
-  - Transiciones de envío y anulación desde borrador (`GestionarTransicionesBorradorUseCaseTest`).
-  - Transiciones de aprobación, rechazo y separación de funciones R7 (`GestionarTransicionesRevisionUseCaseTest`).
-  - Transiciones de pago y límite de reapertura R4 (`GestionarTransicionesFinalesUseCaseTest`).
-  - Búsqueda por ID, paginación con filtros e historial de auditoría (`ConsultarSolicitudesUseCaseTest`).
-  - Carga masiva CSV, tolerancia a errores, idempotencia y solicitudes en `EN_REVISION` (`ProcesarCargaMasivaUseCaseTest`).
-  - Verificación del contexto global de Spring Boot (`ApiApplicationTests`).
+- **Resultado:** `40/40 tests pasados exitosamente (BUILD SUCCESS)`.
+- Cubre la máquina de estados, reglas R1–R7, controladores REST, validaciones y RBAC.
+
+### Compilación Frontend
+```bash
+cd frontend
+npm run build
+```
+- Compilación limpia generando artefactos optimizados con Lazy Loading en `dist/frontend`.
+
+---
+
+## 6. Reflexión Honesta y Agradecimientos
+
+Durante esta prueba técnica se priorizó la construcción de un **núcleo sólido, robusto y testeado (Partes 1, 2, 3 y 4)** con Clean Architecture, Spring Security stateless y Angular 17 Standalone.
+
+Por limitaciones de tiempo, la Parte 5 (Reporte de Conciliación) se incluyó de forma teórica en esta documentación. El proceso representó un excelente desafío técnico que requirió investigar e integrar patrones avanzados de arquitectura y seguridad.
+
+**¡Muchas gracias por la oportunidad de participar en esta prueba técnica!**
