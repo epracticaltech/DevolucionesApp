@@ -7,8 +7,10 @@ import com.devoluciones.api.core.domain.models.pagination.PaginaResultado;
 import com.devoluciones.api.core.domain.models.pagination.SolicitudFiltro;
 import com.devoluciones.api.core.usecase.solicitudes.ActualizarSolicitudUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.CrearSolicitudUseCase;
+import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesBorradorUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.ListarSolicitudesUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.ObtenerSolicitudPorIdUseCase;
+import com.devoluciones.api.infrastructure.entrypoints.dto.request.AccionSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.ActualizarSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.CrearSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.response.SolicitudResponseDTO;
@@ -35,16 +37,19 @@ public class SolicitudController {
 
     private final CrearSolicitudUseCase crearSolicitudUseCase;
     private final ActualizarSolicitudUseCase actualizarSolicitudUseCase;
+    private final GestionarTransicionesBorradorUseCase gestionarTransicionesBorradorUseCase;
     private final ObtenerSolicitudPorIdUseCase obtenerSolicitudPorIdUseCase;
     private final ListarSolicitudesUseCase listarSolicitudesUseCase;
 
     public SolicitudController(
             CrearSolicitudUseCase crearSolicitudUseCase,
             ActualizarSolicitudUseCase actualizarSolicitudUseCase,
+            GestionarTransicionesBorradorUseCase gestionarTransicionesBorradorUseCase,
             ObtenerSolicitudPorIdUseCase obtenerSolicitudPorIdUseCase,
             ListarSolicitudesUseCase listarSolicitudesUseCase) {
         this.crearSolicitudUseCase = crearSolicitudUseCase;
         this.actualizarSolicitudUseCase = actualizarSolicitudUseCase;
+        this.gestionarTransicionesBorradorUseCase = gestionarTransicionesBorradorUseCase;
         this.obtenerSolicitudPorIdUseCase = obtenerSolicitudPorIdUseCase;
         this.listarSolicitudesUseCase = listarSolicitudesUseCase;
     }
@@ -92,6 +97,28 @@ public class SolicitudController {
         SolicitudResponseDTO responseDTO = aResponseDTO(actualizada);
 
         return ResponseEntity.ok(responseDTO);
+    }
+
+    @PostMapping("/{id}/enviar")
+    public ResponseEntity<SolicitudResponseDTO> enviarARevision(
+            @PathVariable Long id,
+            @Valid @RequestBody AccionSolicitudRequestDTO request) {
+
+        Solicitud enviada = gestionarTransicionesBorradorUseCase.enviarARevision(
+                id, request.usuario().username(), request.comentario()
+        );
+        return ResponseEntity.ok(aResponseDTO(enviada));
+    }
+
+    @PostMapping("/{id}/anular")
+    public ResponseEntity<SolicitudResponseDTO> anular(
+            @PathVariable Long id,
+            @Valid @RequestBody AccionSolicitudRequestDTO request) {
+
+        Solicitud anulada = gestionarTransicionesBorradorUseCase.anular(
+                id, request.usuario().username(), request.comentario()
+        );
+        return ResponseEntity.ok(aResponseDTO(anulada));
     }
 
     @GetMapping
