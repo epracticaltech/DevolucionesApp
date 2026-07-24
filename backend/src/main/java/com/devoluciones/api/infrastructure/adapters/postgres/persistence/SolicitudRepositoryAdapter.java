@@ -2,11 +2,18 @@ package com.devoluciones.api.infrastructure.adapters.postgres.persistence;
 
 import com.devoluciones.api.core.domain.models.EventoSolicitud;
 import com.devoluciones.api.core.domain.models.Solicitud;
+import com.devoluciones.api.core.domain.models.pagination.PaginaResultado;
+import com.devoluciones.api.core.domain.models.pagination.SolicitudFiltro;
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
 import com.devoluciones.api.infrastructure.adapters.postgres.entities.EventoSolicitudEntity;
 import com.devoluciones.api.infrastructure.adapters.postgres.entities.SolicitudEntity;
 import com.devoluciones.api.infrastructure.adapters.postgres.repositories.EventoSolicitudJpaRepository;
 import com.devoluciones.api.infrastructure.adapters.postgres.repositories.SolicitudJpaRepository;
+import com.devoluciones.api.infrastructure.adapters.postgres.specifications.SolicitudSpecifications;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +57,31 @@ public class SolicitudRepositoryAdapter implements SolicitudRepositoryPort {
     @Transactional(readOnly = true)
     public boolean existePorReferenciaBanco(String referenciaBanco) {
         return solicitudJpaRepository.existsByReferenciaBanco(referenciaBanco);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginaResultado<Solicitud> buscarConFiltrosYPaginacion(SolicitudFiltro filtro, int pagina, int tamano) {
+        Specification<SolicitudEntity> spec = Specification
+                .where(SolicitudSpecifications.conEstado(filtro.getEstado()))
+                .and(SolicitudSpecifications.conRut(filtro.getRutCliente()))
+                .and(SolicitudSpecifications.conOrigen(filtro.getOrigen()))
+                .and(SolicitudSpecifications.entreFechas(filtro.getFechaDesde(), filtro.getFechaHasta()));
+
+        PageRequest pageRequest = PageRequest.of(pagina, tamano, Sort.by("fechaCreacion").descending());
+        Page<SolicitudEntity> page = solicitudJpaRepository.findAll(spec, pageRequest);
+
+        List<Solicitud> contenidoDominio = page.getContent().stream()
+                .map(this::toDomain)
+                .toList();
+
+        return new PaginaResultado<>(
+                contenidoDominio,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
     }
 
     @Override
