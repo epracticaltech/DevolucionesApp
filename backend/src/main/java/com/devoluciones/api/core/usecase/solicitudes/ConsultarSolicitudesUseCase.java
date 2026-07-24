@@ -1,13 +1,16 @@
 package com.devoluciones.api.core.usecase.solicitudes;
 
 import com.devoluciones.api.core.domain.exceptions.RecursoNoEncontradoException;
+import com.devoluciones.api.core.domain.models.EventoSolicitud;
 import com.devoluciones.api.core.domain.models.Solicitud;
 import com.devoluciones.api.core.domain.models.pagination.PaginaResultado;
 import com.devoluciones.api.core.domain.models.pagination.SolicitudFiltro;
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
 
+import java.util.List;
+
 /**
- * Caso de Uso Consolidado: Consultar solicitudes por ID y listar solicitudes paginadas con filtros.
+ * Caso de Uso Consolidado: Consultar solicitudes por ID, listar solicitudes paginadas con filtros e historial de eventos.
  */
 public class ConsultarSolicitudesUseCase {
 
@@ -28,5 +31,13 @@ public class ConsultarSolicitudesUseCase {
         int tamanoAjustado = (tamano <= 0) ? 10 : Math.min(tamano, 100);
 
         return solicitudRepository.buscarConFiltrosYPaginacion(filtro, paginaAjustada, tamanoAjustado);
+    }
+
+    public List<EventoSolicitud> obtenerHistorial(Long solicitudId) {
+        // 1. Validar que la solicitud existe (si no existe -> RecursoNoEncontradoException HTTP 404)
+        obtenerPorId(solicitudId);
+
+        // 2. Obtener la lista cronológica de eventos de auditoría
+        return solicitudRepository.obtenerHistorialPorSolicitudId(solicitudId);
     }
 }

@@ -1,5 +1,6 @@
 package com.devoluciones.api.infrastructure.entrypoints.controllers;
 
+import com.devoluciones.api.core.domain.models.EventoSolicitud;
 import com.devoluciones.api.core.domain.models.Solicitud;
 import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.models.enums.OrigenSolicitud;
@@ -13,6 +14,7 @@ import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesRevisi
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.AccionSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.RechazarSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.SolicitudRequestDTO;
+import com.devoluciones.api.infrastructure.entrypoints.dto.response.EventoSolicitudResponseDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.response.SolicitudResponseDTO;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -207,6 +209,16 @@ public class SolicitudController {
         return ResponseEntity.ok(responseDTO);
     }
 
+    @GetMapping("/{id}/historial")
+    public ResponseEntity<List<EventoSolicitudResponseDTO>> obtenerHistorial(@PathVariable Long id) {
+        List<EventoSolicitud> eventos = consultarSolicitudesUseCase.obtenerHistorial(id);
+        List<EventoSolicitudResponseDTO> dtos = eventos.stream()
+                .map(this::aEventoSolicitudResponseDTO)
+                .toList();
+
+        return ResponseEntity.ok(dtos);
+    }
+
     private SolicitudResponseDTO aResponseDTO(Solicitud s) {
         return new SolicitudResponseDTO(
                 s.getId(),
@@ -226,6 +238,18 @@ public class SolicitudController {
                 s.getFechaCreacion(),
                 s.getActualizadaPor(),
                 s.getFechaActualizacion()
+        );
+    }
+
+    private EventoSolicitudResponseDTO aEventoSolicitudResponseDTO(EventoSolicitud e) {
+        return new EventoSolicitudResponseDTO(
+                e.getId(),
+                e.getSolicitudId(),
+                e.getEstadoOrigen(),
+                e.getEstadoDestino(),
+                e.getUsuario(),
+                e.getFecha(),
+                e.getComentario()
         );
     }
 }
