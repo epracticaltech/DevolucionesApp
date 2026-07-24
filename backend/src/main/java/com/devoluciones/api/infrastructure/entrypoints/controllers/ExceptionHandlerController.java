@@ -131,11 +131,13 @@ public class ExceptionHandlerController {
     public ResponseEntity<ErrorResponseDTO> manejarExcepcionGeneral(
             Exception ex, HttpServletRequest request) {
 
+        ex.printStackTrace();
+
         ErrorResponseDTO error = new ErrorResponseDTO(
                 LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Error Interno del Servidor",
-                "Ha ocurrido un error inesperado. Contacte al administrador.",
+                ex.getMessage() != null ? ex.getMessage() : "Ha ocurrido un error inesperado. Contacte al administrador.",
                 request.getRequestURI()
         );
 

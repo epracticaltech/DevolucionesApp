@@ -1,9 +1,9 @@
 -- Seed de Usuarios con Passwords BCrypt ('password123')
 INSERT INTO usuarios (username, password, mail, rol) VALUES
-('analista1', '$2a$10$8.UnVuG9HHgffUDAlk8qfOUVGkqRzgVymGe07xd00DMxs.AQubh4a', 'analista1@devoluciones.cl', 'ANALISTA'),
-('analista2', '$2a$10$8.UnVuG9HHgffUDAlk8qfOUVGkqRzgVymGe07xd00DMxs.AQubh4a', 'analista2@devoluciones.cl', 'ANALISTA'),
-('supervisor1', '$2a$10$8.UnVuG9HHgffUDAlk8qfOUVGkqRzgVymGe07xd00DMxs.AQubh4a', 'supervisor1@devoluciones.cl', 'SUPERVISOR'),
-('supervisor2', '$2a$10$8.UnVuG9HHgffUDAlk8qfOUVGkqRzgVymGe07xd00DMxs.AQubh4a', 'supervisor2@devoluciones.cl', 'SUPERVISOR');
+('analista1', '$2a$10$n0pSjmaFMfP1Ye/z1o2uouBOxSsB0c/1ukUKpNpPPYRLKAAlxz1NW', 'analista1@devoluciones.cl', 'ANALISTA'),
+('analista2', '$2a$10$n0pSjmaFMfP1Ye/z1o2uouBOxSsB0c/1ukUKpNpPPYRLKAAlxz1NW', 'analista2@devoluciones.cl', 'ANALISTA'),
+('supervisor1', '$2a$10$n0pSjmaFMfP1Ye/z1o2uouBOxSsB0c/1ukUKpNpPPYRLKAAlxz1NW', 'supervisor1@devoluciones.cl', 'SUPERVISOR'),
+('supervisor2', '$2a$10$n0pSjmaFMfP1Ye/z1o2uouBOxSsB0c/1ukUKpNpPPYRLKAAlxz1NW', 'supervisor2@devoluciones.cl', 'SUPERVISOR');
 
 -- Seed de Solicitudes repartidas en los 6 estados con referencias bancarias e historiales coherentes
 INSERT INTO solicitudes (folio, rut_cliente, nombre_cliente, monto, moneda, banco_destino, cuenta_destino, referencia_banco, origen, estado, motivo_rechazo, veces_reabierta, creada_por, actualizada_por) VALUES
