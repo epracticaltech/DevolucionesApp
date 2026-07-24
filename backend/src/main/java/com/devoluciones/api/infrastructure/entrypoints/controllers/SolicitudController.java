@@ -8,7 +8,9 @@ import com.devoluciones.api.core.domain.models.pagination.SolicitudFiltro;
 import com.devoluciones.api.core.usecase.solicitudes.ConsultarSolicitudesUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarSolicitudesBorradorUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesBorradorUseCase;
+import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesRevisionUseCase;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.AccionSolicitudRequestDTO;
+import com.devoluciones.api.infrastructure.entrypoints.dto.request.RechazarSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.SolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.response.SolicitudResponseDTO;
 import jakarta.validation.Valid;
@@ -34,14 +36,17 @@ public class SolicitudController {
 
     private final GestionarSolicitudesBorradorUseCase gestionarSolicitudesBorradorUseCase;
     private final GestionarTransicionesBorradorUseCase gestionarTransicionesBorradorUseCase;
+    private final GestionarTransicionesRevisionUseCase gestionarTransicionesRevisionUseCase;
     private final ConsultarSolicitudesUseCase consultarSolicitudesUseCase;
 
     public SolicitudController(
             GestionarSolicitudesBorradorUseCase gestionarSolicitudesBorradorUseCase,
             GestionarTransicionesBorradorUseCase gestionarTransicionesBorradorUseCase,
+            GestionarTransicionesRevisionUseCase gestionarTransicionesRevisionUseCase,
             ConsultarSolicitudesUseCase consultarSolicitudesUseCase) {
         this.gestionarSolicitudesBorradorUseCase = gestionarSolicitudesBorradorUseCase;
         this.gestionarTransicionesBorradorUseCase = gestionarTransicionesBorradorUseCase;
+        this.gestionarTransicionesRevisionUseCase = gestionarTransicionesRevisionUseCase;
         this.consultarSolicitudesUseCase = consultarSolicitudesUseCase;
     }
 
@@ -110,6 +115,28 @@ public class SolicitudController {
                 id, request.usuario().username(), request.comentario()
         );
         return ResponseEntity.ok(aResponseDTO(anulada));
+    }
+
+    @PostMapping("/{id}/aprobar")
+    public ResponseEntity<SolicitudResponseDTO> aprobar(
+            @PathVariable Long id,
+            @Valid @RequestBody AccionSolicitudRequestDTO request) {
+
+        Solicitud aprobada = gestionarTransicionesRevisionUseCase.aprobar(
+                id, request.usuario(), request.comentario()
+        );
+        return ResponseEntity.ok(aResponseDTO(aprobada));
+    }
+
+    @PostMapping("/{id}/rechazar")
+    public ResponseEntity<SolicitudResponseDTO> rechazar(
+            @PathVariable Long id,
+            @Valid @RequestBody RechazarSolicitudRequestDTO request) {
+
+        Solicitud rechazada = gestionarTransicionesRevisionUseCase.rechazar(
+                id, request.usuario(), request.motivoRechazo(), request.comentario()
+        );
+        return ResponseEntity.ok(aResponseDTO(rechazada));
     }
 
     @GetMapping

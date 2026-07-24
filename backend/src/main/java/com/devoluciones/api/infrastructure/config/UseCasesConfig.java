@@ -4,6 +4,7 @@ import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
 import com.devoluciones.api.core.usecase.solicitudes.ConsultarSolicitudesUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarSolicitudesBorradorUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesBorradorUseCase;
+import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesRevisionUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,12 @@ public class UseCasesConfig {
     @Transactional
     public GestionarTransicionesBorradorUseCase gestionarTransicionesBorradorUseCase(SolicitudRepositoryPort solicitudRepositoryPort) {
         return new GestionarTransicionesBorradorUseCase(solicitudRepositoryPort);
+    }
+
+    @Bean
+    @Transactional
+    public GestionarTransicionesRevisionUseCase gestionarTransicionesRevisionUseCase(SolicitudRepositoryPort solicitudRepositoryPort) {
+        return new GestionarTransicionesRevisionUseCase(solicitudRepositoryPort);
     }
 
     @Bean
