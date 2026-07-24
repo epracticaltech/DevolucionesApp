@@ -1,1 +1,247 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: #eff6ff;
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+
+  /* State Badge Colors */
+  --badge-borrador-bg: #f1f5f9;
+  --badge-borrador-text: #475569;
+  --badge-revision-bg: #fef3c7;
+  --badge-revision-text: #b45309;
+  --badge-aprobada-bg: #dcfce7;
+  --badge-aprobada-text: #15803d;
+  --badge-rechazada-bg: #fee2e2;
+  --badge-rechazada-text: #b91c1c;
+  --badge-pagada-bg: #e0e7ff;
+  --badge-pagada-text: #4338ca;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Layout Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: #ffffff;
+  border-color: var(--border-color);
+  color: var(--text-main);
+}
+.btn-secondary:hover {
+  background-color: #f1f5f9;
+}
+
+.btn-success {
+  background-color: #16a34a;
+  color: #ffffff;
+}
+.btn-success:hover {
+  background-color: #15803d;
+}
+
+.btn-danger {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+.btn-danger:hover {
+  background-color: #b91c1c;
+}
+
+.btn-warning {
+  background-color: #d97706;
+  color: #ffffff;
+}
+.btn-warning:hover {
+  background-color: #b45309;
+}
+
+.btn-disabled, .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* State Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.badge-BORRADOR {
+  background-color: var(--badge-borrador-bg);
+  color: var(--badge-borrador-text);
+}
+.badge-EN_REVISION {
+  background-color: var(--badge-revision-bg);
+  color: var(--badge-revision-text);
+}
+.badge-APROBADA {
+  background-color: var(--badge-aprobada-bg);
+  color: var(--badge-aprobada-text);
+}
+.badge-RECHAZADA {
+  background-color: var(--badge-rechazada-bg);
+  color: var(--badge-rechazada-text);
+}
+.badge-PAGADA {
+  background-color: var(--badge-pagada-bg);
+  color: var(--badge-pagada-text);
+}
+
+/* Tables */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+th {
+  background-color: #f8fafc;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* Form Controls */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  color: var(--text-main);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.invalid-feedback {
+  color: #dc2626;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* Alerts */
+.alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+
+.alert-danger {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.alert-success {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.alert-info {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
