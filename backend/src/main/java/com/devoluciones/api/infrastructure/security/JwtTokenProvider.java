@@ -17,8 +17,8 @@ public class JwtTokenProvider {
     private final long expirationMs;
 
     public JwtTokenProvider(
-            @Value("${app.security.jwt.secret:${jwt.secret:ClaveSecretaSuperSeguraParaDevolucionesApp2026ConMasDe256BitsDeLongitud}}") String jwtSecret,
-            @Value("${app.security.jwt.expiration-minutes:${jwt.expiration-minutes:60}}") long expirationMinutes) {
+            @Value("${app.security.jwt.secret:DevolucionesAppSecretoConMasDe32Caracteres2026}") String jwtSecret,
+            @Value("${app.security.jwt.expiration-minutes:60}") long expirationMinutes) {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMinutes * 60 * 1000;
     }

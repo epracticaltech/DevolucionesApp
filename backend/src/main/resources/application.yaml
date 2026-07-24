@@ -21,17 +21,13 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
-jwt:
-  secret: ${JWT_SECRET:ClaveSecretaSuperSeguraParaDevolucionesApp2026ConMasDe256BitsDeLongitud}
-  expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
-
 app:
   security:
     jwt:
-      secret: ${JWT_SECRET:ClaveSecretaSuperSeguraParaDevolucionesApp2026ConMasDe256BitsDeLongitud}
+      secret: ${JWT_SECRET:DevolucionesAppSecretoConMasDe32Caracteres2026}
       expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
   carga:
-    dir: ${CARGA_DIR:../carga}
+    dir: ${CARGA_DIR:./carga}
     max-filas: ${CARGA_MAX_FILAS:50000}
 
 server:

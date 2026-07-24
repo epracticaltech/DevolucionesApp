@@ -4,31 +4,44 @@ services:
     container_name: db_devoluciones
     ports: [ "5432:5432" ]
     environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE:-devoluciones}
+      POSTGRES_USER: ${DB_USER:-devoluciones}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devoluciones_secret_pass}
     volumes:
       - pgdata_devoluciones:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_DATABASE}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-devoluciones} -d ${DB_DATABASE:-devoluciones}" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
   backend:
     build: ./backend
-    image: devoluciones:latest
+    image: devoluciones-backend:latest
     container_name: api_devoluciones
     ports: [ "8080:8080" ]
     env_file: .env
     environment:
-      DB_URL: jdbc:postgresql://db:5432/${DB_DATABASE}
-      CARGA_DIR: ./carga
+      DB_URL: jdbc:postgresql://db:5432/${DB_DATABASE:-devoluciones}
+      DB_USER: ${DB_USER:-devoluciones}
+      DB_PASSWORD: ${DB_PASSWORD:-devoluciones_secret_pass}
+      JWT_SECRET: ${JWT_SECRET:-DevolucionesAppSecretoConMasDe32Caracteres2026}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-60}
+      CARGA_DIR: /app/carga
+      CARGA_MAX_FILAS: ${CARGA_MAX_FILAS:-50000}
     volumes:
       - ./carga:/app/carga
     depends_on:
       db:
         condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    image: devoluciones-frontend:latest
+    container_name: ui_devoluciones
+    ports: [ "4200:80" ]
+    depends_on:
+      - backend
 
 volumes:
   pgdata_devoluciones:
