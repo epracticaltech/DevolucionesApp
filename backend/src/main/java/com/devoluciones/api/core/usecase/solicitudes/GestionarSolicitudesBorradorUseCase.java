@@ -7,11 +7,11 @@ import com.devoluciones.api.core.domain.models.EventoSolicitud;
 import com.devoluciones.api.core.domain.models.Solicitud;
 import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.models.enums.OrigenSolicitud;
+import com.devoluciones.api.core.domain.port.FolioGeneratorPort;
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
 import com.devoluciones.api.shared.utils.RutUtils;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Caso de Uso Consolidado: Gestiona la creación y actualización de solicitudes en estado BORRADOR.
@@ -19,9 +19,13 @@ import java.util.concurrent.ThreadLocalRandom;
 public class GestionarSolicitudesBorradorUseCase {
 
     private final SolicitudRepositoryPort solicitudRepository;
+    private final FolioGeneratorPort folioGenerator;
 
-    public GestionarSolicitudesBorradorUseCase(SolicitudRepositoryPort solicitudRepository) {
+    public GestionarSolicitudesBorradorUseCase(
+            SolicitudRepositoryPort solicitudRepository,
+            FolioGeneratorPort folioGenerator) {
         this.solicitudRepository = solicitudRepository;
+        this.folioGenerator = folioGenerator;
     }
 
     public Solicitud crear(Solicitud input) {
@@ -32,11 +36,8 @@ public class GestionarSolicitudesBorradorUseCase {
             );
         }
 
-        // 2. Generar Folio Único (DEV-AAAA-NNNNNN)
-        String folio;
-        do {
-            folio = generarFolioUnico();
-        } while (solicitudRepository.buscarPorFolio(folio).isPresent());
+        // 2. Generar Folio Único Correlativo mediante Secuencia Unificada (DEV-AAAA-NNNNNN)
+        String folio = folioGenerator.generarFolio();
 
         LocalDateTime ahora = LocalDateTime.now();
 
@@ -124,11 +125,5 @@ public class GestionarSolicitudesBorradorUseCase {
         solicitudRepository.registrarEvento(evento);
 
         return actualizada;
-    }
-
-    private String generarFolioUnico() {
-        int anioActual = LocalDateTime.now().getYear();
-        int secuencial = ThreadLocalRandom.current().nextInt(1, 999999);
-        return String.format("DEV-%d-%06d", anioActual, secuencial);
     }
 }

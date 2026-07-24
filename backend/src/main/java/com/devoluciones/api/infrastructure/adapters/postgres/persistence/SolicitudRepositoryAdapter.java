@@ -42,6 +42,16 @@ public class SolicitudRepositoryAdapter implements SolicitudRepositoryPort {
     }
 
     @Override
+    public List<Solicitud> guardarTodas(List<Solicitud> solicitudes) {
+        if (solicitudes == null || solicitudes.isEmpty()) {
+            return List.of();
+        }
+        List<SolicitudEntity> entities = solicitudes.stream().map(this::toEntity).toList();
+        List<SolicitudEntity> guardadas = solicitudJpaRepository.saveAll(entities);
+        return guardadas.stream().map(this::toDomain).toList();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<Solicitud> buscarPorId(Long id) {
         return solicitudJpaRepository.findById(id).map(this::toDomain);
@@ -57,6 +67,12 @@ public class SolicitudRepositoryAdapter implements SolicitudRepositoryPort {
     @Transactional(readOnly = true)
     public boolean existePorReferenciaBanco(String referenciaBanco) {
         return solicitudJpaRepository.existsByReferenciaBanco(referenciaBanco);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginaResultado<Solicitud> buscarConFiltros(SolicitudFiltro filtro) {
+        return buscarConFiltrosYPaginacion(filtro, filtro.getPagina(), filtro.getTamano());
     }
 
     @Override
@@ -89,6 +105,21 @@ public class SolicitudRepositoryAdapter implements SolicitudRepositoryPort {
         EventoSolicitudEntity entity = toEntity(evento);
         EventoSolicitudEntity guardado = eventoSolicitudJpaRepository.save(entity);
         return toDomain(guardado);
+    }
+
+    @Override
+    public void registrarEventos(List<EventoSolicitud> eventos) {
+        if (eventos == null || eventos.isEmpty()) {
+            return;
+        }
+        List<EventoSolicitudEntity> entities = eventos.stream().map(this::toEntity).toList();
+        eventoSolicitudJpaRepository.saveAll(entities);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventoSolicitud> obtenerHistorialEventos(Long solicitudId) {
+        return obtenerHistorialPorSolicitudId(solicitudId);
     }
 
     @Override

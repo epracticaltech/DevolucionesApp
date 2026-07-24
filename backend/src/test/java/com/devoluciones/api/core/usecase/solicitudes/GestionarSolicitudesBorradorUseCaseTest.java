@@ -5,6 +5,7 @@ import com.devoluciones.api.core.domain.exceptions.TransicionInvalidaException;
 import com.devoluciones.api.core.domain.models.Solicitud;
 import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.models.enums.OrigenSolicitud;
+import com.devoluciones.api.core.domain.port.FolioGeneratorPort;
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,12 +21,16 @@ import static org.mockito.ArgumentMatchers.any;
 class GestionarSolicitudesBorradorUseCaseTest {
 
     private SolicitudRepositoryPort solicitudRepository;
+    private FolioGeneratorPort folioGenerator;
     private GestionarSolicitudesBorradorUseCase useCase;
 
     @BeforeEach
     void setUp() {
         solicitudRepository = Mockito.mock(SolicitudRepositoryPort.class);
-        useCase = new GestionarSolicitudesBorradorUseCase(solicitudRepository);
+        folioGenerator = Mockito.mock(FolioGeneratorPort.class);
+        useCase = new GestionarSolicitudesBorradorUseCase(solicitudRepository, folioGenerator);
+
+        Mockito.when(folioGenerator.generarFolio()).thenReturn("DEV-2026-000001");
     }
 
     @Test
@@ -42,7 +47,6 @@ class GestionarSolicitudesBorradorUseCaseTest {
                 .build();
 
         Mockito.when(solicitudRepository.existePorReferenciaBanco("REF-2026-000123")).thenReturn(false);
-        Mockito.when(solicitudRepository.buscarPorFolio(any())).thenReturn(Optional.empty());
         Mockito.when(solicitudRepository.guardar(any())).thenAnswer(invocation -> {
             Solicitud s = invocation.getArgument(0);
             s.setId(1L);
@@ -55,7 +59,7 @@ class GestionarSolicitudesBorradorUseCaseTest {
         assertEquals(1L, creada.getId());
         assertEquals(EstadoSolicitud.BORRADOR, creada.getEstado());
         assertEquals(OrigenSolicitud.MANUAL, creada.getOrigen());
-        assertTrue(creada.getFolio().startsWith("DEV-"));
+        assertEquals("DEV-2026-000001", creada.getFolio());
 
         Mockito.verify(solicitudRepository, Mockito.times(1)).guardar(any());
         Mockito.verify(solicitudRepository, Mockito.times(1)).registrarEvento(any());

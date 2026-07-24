@@ -1,6 +1,9 @@
 package com.devoluciones.api.infrastructure.config;
 
+import com.devoluciones.api.core.domain.port.CargaMasivaRepositoryPort;
+import com.devoluciones.api.core.domain.port.FolioGeneratorPort;
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
+import com.devoluciones.api.core.usecase.cargas.ProcesarCargaMasivaUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.ConsultarSolicitudesUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarSolicitudesBorradorUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesBorradorUseCase;
@@ -15,8 +18,10 @@ public class UseCasesConfig {
 
     @Bean
     @Transactional
-    public GestionarSolicitudesBorradorUseCase gestionarSolicitudesBorradorUseCase(SolicitudRepositoryPort solicitudRepositoryPort) {
-        return new GestionarSolicitudesBorradorUseCase(solicitudRepositoryPort);
+    public GestionarSolicitudesBorradorUseCase gestionarSolicitudesBorradorUseCase(
+            SolicitudRepositoryPort solicitudRepositoryPort,
+            FolioGeneratorPort folioGeneratorPort) {
+        return new GestionarSolicitudesBorradorUseCase(solicitudRepositoryPort, folioGeneratorPort);
     }
 
     @Bean
@@ -41,5 +46,14 @@ public class UseCasesConfig {
     @Transactional(readOnly = true)
     public ConsultarSolicitudesUseCase consultarSolicitudesUseCase(SolicitudRepositoryPort solicitudRepositoryPort) {
         return new ConsultarSolicitudesUseCase(solicitudRepositoryPort);
+    }
+
+    @Bean
+    @Transactional
+    public ProcesarCargaMasivaUseCase procesarCargaMasivaUseCase(
+            CargaMasivaRepositoryPort cargaMasivaRepositoryPort,
+            SolicitudRepositoryPort solicitudRepositoryPort,
+            FolioGeneratorPort folioGeneratorPort) {
+        return new ProcesarCargaMasivaUseCase(cargaMasivaRepositoryPort, solicitudRepositoryPort, folioGeneratorPort);
     }
 }

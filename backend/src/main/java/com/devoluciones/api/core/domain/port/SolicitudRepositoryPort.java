@@ -12,15 +12,23 @@ public interface SolicitudRepositoryPort {
 
     Solicitud guardar(Solicitud solicitud);
 
+    List<Solicitud> guardarTodas(List<Solicitud> solicitudes);
+
     Optional<Solicitud> buscarPorId(Long id);
 
     Optional<Solicitud> buscarPorFolio(String folio);
 
     boolean existePorReferenciaBanco(String referenciaBanco);
 
+    PaginaResultado<Solicitud> buscarConFiltros(SolicitudFiltro filtro);
+
     PaginaResultado<Solicitud> buscarConFiltrosYPaginacion(SolicitudFiltro filtro, int pagina, int tamano);
 
     EventoSolicitud registrarEvento(EventoSolicitud evento);
+
+    void registrarEventos(List<EventoSolicitud> eventos);
+
+    List<EventoSolicitud> obtenerHistorialEventos(Long solicitudId);
 
     List<EventoSolicitud> obtenerHistorialPorSolicitudId(Long solicitudId);
 }
