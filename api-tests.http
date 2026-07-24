@@ -1,0 +1,153 @@
+### 1. Login como Analista
+# @name loginAnalista
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "analista1",
+  "password": "password123"
+}
+
+### Guardar Token Analista
+@tokenAnalista = {{loginAnalista.response.body.access_token}}
+
+---
+
+### 2. Login como Supervisor
+# @name loginSupervisor
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "supervisor1",
+  "password": "password123"
+}
+
+### Guardar Token Supervisor
+@tokenSupervisor = {{loginSupervisor.response.body.access_token}}
+
+---
+
+### 3. Crear Solicitud Manual en BORRADOR (Como Analista)
+POST http://localhost:8080/api/v1/solicitudes
+Authorization: Bearer {{tokenAnalista}}
+Content-Type: application/json
+
+{
+  "rutCliente": "12345678-5",
+  "nombreCliente": "MARIA PEREZ SOTO",
+  "monto": 150000.00,
+  "bancoDestino": "BANCO CHILE",
+  "cuentaDestino": "00123456",
+  "referenciaBanco": "REF-HTTP-TEST-001"
+}
+
+---
+
+### 4. Consultar Listado Paginado con Filtros en BD
+GET http://localhost:8080/api/v1/solicitudes?estado=BORRADOR&page=0&size=10
+Authorization: Bearer {{tokenAnalista}}
+
+---
+
+### 5. Enviar a Revisión (BORRADOR -> EN_REVISION)
+POST http://localhost:8080/api/v1/solicitudes/1/enviar
+Authorization: Bearer {{tokenAnalista}}
+Content-Type: application/json
+
+{
+  "comentario": "Enviando antecedente a revisión de supervisor"
+}
+
+---
+
+### 6. Intentar Aprobar como ANALISTA (Debe retornar 403 Forbidden por RBAC)
+POST http://localhost:8080/api/v1/solicitudes/1/aprobar
+Authorization: Bearer {{tokenAnalista}}
+Content-Type: application/json
+
+{
+  "comentario": "Intento de aprobación no autorizado"
+}
+
+---
+
+### 7. Intentar Pagar Directamente una Solicitud en EN_REVISION (Debe retornar 409 Conflict - Transición Inválida)
+POST http://localhost:8080/api/v1/solicitudes/3/pagar
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{
+  "comentario": "Intento de pago directo inválido"
+}
+
+---
+
+### 8. Rechazar como SUPERVISOR (EN_REVISION -> RECHAZADA)
+POST http://localhost:8080/api/v1/solicitudes/3/rechazar
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{
+  "comentario": "Inconsistencia en comprobante de pago",
+  "motivoRechazo": "Monto difiere de la cartola bancaria presentada"
+}
+
+---
+
+### 9. Reabrir Solicitud Rechazada (RECHAZADA -> BORRADOR)
+POST http://localhost:8080/api/v1/solicitudes/3/reabrir
+Authorization: Bearer {{tokenAnalista}}
+Content-Type: application/json
+
+{
+  "comentario": "Reabriendo solicitud para corregir monto"
+}
+
+---
+
+### 10. Aprobar como SUPERVISOR (EN_REVISION -> APROBADA)
+POST http://localhost:8080/api/v1/solicitudes/5/aprobar
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{
+  "comentario": "Aprobado tras verificar liquidación"
+}
+
+---
+
+### 11. Pagar como SUPERVISOR (APROBADA -> PAGADA)
+POST http://localhost:8080/api/v1/solicitudes/5/pagar
+Authorization: Bearer {{tokenSupervisor}}
+Content-Type: application/json
+
+{
+  "comentario": "Pago registrado y transferido por tesorería"
+}
+
+---
+
+### 12. Consultar Histórico de Auditoría Inmutable
+GET http://localhost:8080/api/v1/solicitudes/5/historial
+Authorization: Bearer {{tokenAnalista}}
+
+---
+
+### 13. Carga Masiva CSV (Multipart Form-Data)
+POST http://localhost:8080/api/v1/cargas-masivas
+Authorization: Bearer {{tokenAnalista}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="archivo"; filename="pagos_banco_ejemplo.csv"
+Content-Type: text/csv
+
+< ./carga/pagos_banco_ejemplo.csv
+--WebAppBoundary--
+
+---
+
+### 14. Consultar Resumen de Carga Masiva por ID
+GET http://localhost:8080/api/v1/cargas-masivas/1
+Authorization: Bearer {{tokenAnalista}}
