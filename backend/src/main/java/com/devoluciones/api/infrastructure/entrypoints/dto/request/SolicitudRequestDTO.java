@@ -10,9 +10,10 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 /**
- * DTO de entrada para la actualización de solicitudes en estado BORRADOR (PUT /api/v1/solicitudes/{id}).
+ * DTO unificado de entrada para crear y editar solicitudes en estado BORRADOR
+ * (POST /api/v1/solicitudes y PUT /api/v1/solicitudes/{id}).
  */
-public record ActualizarSolicitudRequestDTO(
+public record SolicitudRequestDTO(
 
         @NotBlank(message = "El RUT del cliente es obligatorio")
         @ValidRut

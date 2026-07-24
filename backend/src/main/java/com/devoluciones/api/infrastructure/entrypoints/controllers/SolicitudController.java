@@ -5,14 +5,11 @@ import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.models.enums.OrigenSolicitud;
 import com.devoluciones.api.core.domain.models.pagination.PaginaResultado;
 import com.devoluciones.api.core.domain.models.pagination.SolicitudFiltro;
-import com.devoluciones.api.core.usecase.solicitudes.ActualizarSolicitudUseCase;
-import com.devoluciones.api.core.usecase.solicitudes.CrearSolicitudUseCase;
+import com.devoluciones.api.core.usecase.solicitudes.ConsultarSolicitudesUseCase;
+import com.devoluciones.api.core.usecase.solicitudes.GestionarSolicitudesBorradorUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.GestionarTransicionesBorradorUseCase;
-import com.devoluciones.api.core.usecase.solicitudes.ListarSolicitudesUseCase;
-import com.devoluciones.api.core.usecase.solicitudes.ObtenerSolicitudPorIdUseCase;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.AccionSolicitudRequestDTO;
-import com.devoluciones.api.infrastructure.entrypoints.dto.request.ActualizarSolicitudRequestDTO;
-import com.devoluciones.api.infrastructure.entrypoints.dto.request.CrearSolicitudRequestDTO;
+import com.devoluciones.api.infrastructure.entrypoints.dto.request.SolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.response.SolicitudResponseDTO;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -35,28 +32,22 @@ import java.util.List;
 @RequestMapping("/api/v1/solicitudes")
 public class SolicitudController {
 
-    private final CrearSolicitudUseCase crearSolicitudUseCase;
-    private final ActualizarSolicitudUseCase actualizarSolicitudUseCase;
+    private final GestionarSolicitudesBorradorUseCase gestionarSolicitudesBorradorUseCase;
     private final GestionarTransicionesBorradorUseCase gestionarTransicionesBorradorUseCase;
-    private final ObtenerSolicitudPorIdUseCase obtenerSolicitudPorIdUseCase;
-    private final ListarSolicitudesUseCase listarSolicitudesUseCase;
+    private final ConsultarSolicitudesUseCase consultarSolicitudesUseCase;
 
     public SolicitudController(
-            CrearSolicitudUseCase crearSolicitudUseCase,
-            ActualizarSolicitudUseCase actualizarSolicitudUseCase,
+            GestionarSolicitudesBorradorUseCase gestionarSolicitudesBorradorUseCase,
             GestionarTransicionesBorradorUseCase gestionarTransicionesBorradorUseCase,
-            ObtenerSolicitudPorIdUseCase obtenerSolicitudPorIdUseCase,
-            ListarSolicitudesUseCase listarSolicitudesUseCase) {
-        this.crearSolicitudUseCase = crearSolicitudUseCase;
-        this.actualizarSolicitudUseCase = actualizarSolicitudUseCase;
+            ConsultarSolicitudesUseCase consultarSolicitudesUseCase) {
+        this.gestionarSolicitudesBorradorUseCase = gestionarSolicitudesBorradorUseCase;
         this.gestionarTransicionesBorradorUseCase = gestionarTransicionesBorradorUseCase;
-        this.obtenerSolicitudPorIdUseCase = obtenerSolicitudPorIdUseCase;
-        this.listarSolicitudesUseCase = listarSolicitudesUseCase;
+        this.consultarSolicitudesUseCase = consultarSolicitudesUseCase;
     }
 
     @PostMapping
     public ResponseEntity<SolicitudResponseDTO> crearSolicitud(
-            @Valid @RequestBody CrearSolicitudRequestDTO request) {
+            @Valid @RequestBody SolicitudRequestDTO request) {
 
         Solicitud solicitudInput = Solicitud.builder()
                 .rutCliente(request.rutCliente())
@@ -68,7 +59,7 @@ public class SolicitudController {
                 .creadaPor(request.usuario().username())
                 .build();
 
-        Solicitud creada = crearSolicitudUseCase.ejecutar(solicitudInput);
+        Solicitud creada = gestionarSolicitudesBorradorUseCase.crear(solicitudInput);
         SolicitudResponseDTO responseDTO = aResponseDTO(creada);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -82,7 +73,7 @@ public class SolicitudController {
     @PutMapping("/{id}")
     public ResponseEntity<SolicitudResponseDTO> actualizarSolicitud(
             @PathVariable Long id,
-            @Valid @RequestBody ActualizarSolicitudRequestDTO request) {
+            @Valid @RequestBody SolicitudRequestDTO request) {
 
         Solicitud datosModificados = Solicitud.builder()
                 .rutCliente(request.rutCliente())
@@ -93,7 +84,7 @@ public class SolicitudController {
                 .referenciaBanco(request.referenciaBanco())
                 .build();
 
-        Solicitud actualizada = actualizarSolicitudUseCase.ejecutar(id, datosModificados, request.usuario().username());
+        Solicitud actualizada = gestionarSolicitudesBorradorUseCase.actualizar(id, datosModificados, request.usuario().username());
         SolicitudResponseDTO responseDTO = aResponseDTO(actualizada);
 
         return ResponseEntity.ok(responseDTO);
@@ -139,7 +130,7 @@ public class SolicitudController {
                 .fechaHasta(fechaHasta)
                 .build();
 
-        PaginaResultado<Solicitud> resultadoDominio = listarSolicitudesUseCase.ejecutar(filtro, page, size);
+        PaginaResultado<Solicitud> resultadoDominio = consultarSolicitudesUseCase.listarConFiltros(filtro, page, size);
 
         List<SolicitudResponseDTO> dtosContent = resultadoDominio.getContenido().stream()
                 .map(this::aResponseDTO)
@@ -158,7 +149,7 @@ public class SolicitudController {
 
     @GetMapping("/{id}")
     public ResponseEntity<SolicitudResponseDTO> obtenerPorId(@PathVariable Long id) {
-        Solicitud solicitud = obtenerSolicitudPorIdUseCase.ejecutar(id);
+        Solicitud solicitud = consultarSolicitudesUseCase.obtenerPorId(id);
         SolicitudResponseDTO responseDTO = aResponseDTO(solicitud);
         return ResponseEntity.ok(responseDTO);
     }
