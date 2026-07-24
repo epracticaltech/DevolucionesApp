@@ -5,9 +5,11 @@ import com.devoluciones.api.core.domain.models.enums.EstadoSolicitud;
 import com.devoluciones.api.core.domain.models.enums.OrigenSolicitud;
 import com.devoluciones.api.core.domain.models.pagination.PaginaResultado;
 import com.devoluciones.api.core.domain.models.pagination.SolicitudFiltro;
+import com.devoluciones.api.core.usecase.solicitudes.ActualizarSolicitudUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.CrearSolicitudUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.ListarSolicitudesUseCase;
 import com.devoluciones.api.core.usecase.solicitudes.ObtenerSolicitudPorIdUseCase;
+import com.devoluciones.api.infrastructure.entrypoints.dto.request.ActualizarSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.CrearSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.response.SolicitudResponseDTO;
 import jakarta.validation.Valid;
@@ -16,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,14 +34,17 @@ import java.util.List;
 public class SolicitudController {
 
     private final CrearSolicitudUseCase crearSolicitudUseCase;
+    private final ActualizarSolicitudUseCase actualizarSolicitudUseCase;
     private final ObtenerSolicitudPorIdUseCase obtenerSolicitudPorIdUseCase;
     private final ListarSolicitudesUseCase listarSolicitudesUseCase;
 
     public SolicitudController(
             CrearSolicitudUseCase crearSolicitudUseCase,
+            ActualizarSolicitudUseCase actualizarSolicitudUseCase,
             ObtenerSolicitudPorIdUseCase obtenerSolicitudPorIdUseCase,
             ListarSolicitudesUseCase listarSolicitudesUseCase) {
         this.crearSolicitudUseCase = crearSolicitudUseCase;
+        this.actualizarSolicitudUseCase = actualizarSolicitudUseCase;
         this.obtenerSolicitudPorIdUseCase = obtenerSolicitudPorIdUseCase;
         this.listarSolicitudesUseCase = listarSolicitudesUseCase;
     }
@@ -66,6 +72,26 @@ public class SolicitudController {
                 .toUri();
 
         return ResponseEntity.created(location).body(responseDTO);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<SolicitudResponseDTO> actualizarSolicitud(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarSolicitudRequestDTO request) {
+
+        Solicitud datosModificados = Solicitud.builder()
+                .rutCliente(request.rutCliente())
+                .nombreCliente(request.nombreCliente())
+                .monto(request.monto())
+                .bancoDestino(request.bancoDestino())
+                .cuentaDestino(request.cuentaDestino())
+                .referenciaBanco(request.referenciaBanco())
+                .build();
+
+        Solicitud actualizada = actualizarSolicitudUseCase.ejecutar(id, datosModificados, request.usuario().username());
+        SolicitudResponseDTO responseDTO = aResponseDTO(actualizada);
+
+        return ResponseEntity.ok(responseDTO);
     }
 
     @GetMapping
