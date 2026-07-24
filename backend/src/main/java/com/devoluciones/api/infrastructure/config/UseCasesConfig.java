@@ -2,6 +2,7 @@ package com.devoluciones.api.infrastructure.config;
 
 import com.devoluciones.api.core.domain.port.SolicitudRepositoryPort;
 import com.devoluciones.api.core.usecase.solicitudes.CrearSolicitudUseCase;
+import com.devoluciones.api.core.usecase.solicitudes.ObtenerSolicitudPorIdUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,4 +15,11 @@ public class UseCasesConfig {
     public CrearSolicitudUseCase crearSolicitudUseCase(SolicitudRepositoryPort solicitudRepositoryPort) {
         return new CrearSolicitudUseCase(solicitudRepositoryPort);
     }
+
+    @Bean
+    @Transactional(readOnly = true)
+    public ObtenerSolicitudPorIdUseCase obtenerSolicitudPorIdUseCase(SolicitudRepositoryPort solicitudRepositoryPort) {
+        return new ObtenerSolicitudPorIdUseCase(solicitudRepositoryPort);
+    }
+    
 }

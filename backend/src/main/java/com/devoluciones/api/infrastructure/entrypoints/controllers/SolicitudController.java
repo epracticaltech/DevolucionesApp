@@ -2,10 +2,13 @@ package com.devoluciones.api.infrastructure.entrypoints.controllers;
 
 import com.devoluciones.api.core.domain.models.Solicitud;
 import com.devoluciones.api.core.usecase.solicitudes.CrearSolicitudUseCase;
+import com.devoluciones.api.core.usecase.solicitudes.ObtenerSolicitudPorIdUseCase;
 import com.devoluciones.api.infrastructure.entrypoints.dto.request.CrearSolicitudRequestDTO;
 import com.devoluciones.api.infrastructure.entrypoints.dto.response.SolicitudResponseDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +22,13 @@ import java.net.URI;
 public class SolicitudController {
 
     private final CrearSolicitudUseCase crearSolicitudUseCase;
+    private final ObtenerSolicitudPorIdUseCase obtenerSolicitudPorIdUseCase;
 
-    public SolicitudController(CrearSolicitudUseCase crearSolicitudUseCase) {
+    public SolicitudController(
+            CrearSolicitudUseCase crearSolicitudUseCase,
+            ObtenerSolicitudPorIdUseCase obtenerSolicitudPorIdUseCase) {
         this.crearSolicitudUseCase = crearSolicitudUseCase;
+        this.obtenerSolicitudPorIdUseCase = obtenerSolicitudPorIdUseCase;
     }
 
     @PostMapping
@@ -52,6 +59,13 @@ public class SolicitudController {
                 .toUri();
 
         return ResponseEntity.created(location).body(responseDTO);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SolicitudResponseDTO> obtenerPorId(@PathVariable Long id) {
+        Solicitud solicitud = obtenerSolicitudPorIdUseCase.ejecutar(id);
+        SolicitudResponseDTO responseDTO = aResponseDTO(solicitud);
+        return ResponseEntity.ok(responseDTO);
     }
 
     private SolicitudResponseDTO aResponseDTO(Solicitud s) {

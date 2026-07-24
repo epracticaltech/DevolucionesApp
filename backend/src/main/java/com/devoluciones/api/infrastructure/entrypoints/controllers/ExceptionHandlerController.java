@@ -1,5 +1,6 @@
 package com.devoluciones.api.infrastructure.entrypoints.controllers;
 
+import com.devoluciones.api.core.domain.exceptions.RecursoNoEncontradoException;
 import com.devoluciones.api.core.domain.exceptions.ReglaNegocioException;
 import com.devoluciones.api.core.domain.exceptions.TransicionInvalidaException;
 import com.devoluciones.api.infrastructure.entrypoints.dto.response.ErrorResponseDTO;
@@ -18,6 +19,20 @@ import java.util.stream.Collectors;
  */
 @ControllerAdvice
 public class ExceptionHandlerController {
+
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarRecursoNoEncontrado(
+            RecursoNoEncontradoException ex, HttpServletRequest request) {
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Recurso No Encontrado",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
 
     @ExceptionHandler(TransicionInvalidaException.class)
     public ResponseEntity<ErrorResponseDTO> manejarTransicionInvalida(
