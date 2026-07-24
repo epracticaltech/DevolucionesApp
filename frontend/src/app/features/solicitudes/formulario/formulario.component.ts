@@ -238,7 +238,7 @@ export class FormularioComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.mensaje || 'No se pudo cargar la información de la solicitud.';
+        this.errorMessage = err.error?.detalle || 'No se pudo cargar la información de la solicitud.';
       }
     });
   }
@@ -270,7 +270,7 @@ export class FormularioComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.mensaje || 'Error al guardar la solicitud en el servidor.';
+        this.errorMessage = err.error?.detalle || 'Error al guardar la solicitud en el servidor.';
       }
     });
   }

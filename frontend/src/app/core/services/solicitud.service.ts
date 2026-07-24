@@ -74,7 +74,7 @@ export class SolicitudService {
 
   cargarCsv(file: File): Observable<ResumenCargaMasiva> {
     const formData = new FormData();
-    formData.append('archivo', file);
+    formData.append('file', file);
     return this.http.post<ResumenCargaMasiva>(`${environment.apiUrl}/cargas-masivas`, formData);
   }
 }

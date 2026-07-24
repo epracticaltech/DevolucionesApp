@@ -138,7 +138,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.mensaje || 'Credenciales inválidas. Verifique usuario y contraseña.';
+        this.errorMessage = err.error?.detalle || 'Credenciales inválidas. Verifique usuario y contraseña.';
       }
     });
   }

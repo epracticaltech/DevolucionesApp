@@ -431,7 +431,7 @@ export class DetalleComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.mensaje || 'No se pudo cargar la solicitud.';
+        this.errorMessage = err.error?.detalle || 'No se pudo cargar la solicitud.';
       }
     });
   }
@@ -473,7 +473,7 @@ export class DetalleComponent implements OnInit {
         this.cargarHistorial(id);
       },
       error: (err) => {
-        this.errorMessage = err.error?.mensaje || 'Error al ejecutar la acción.';
+        this.errorMessage = err.error?.detalle || 'Error al ejecutar la acción.';
       }
     });
   }
@@ -501,7 +501,7 @@ export class DetalleComponent implements OnInit {
         this.cargarHistorial(id);
       },
       error: (err) => {
-        this.errorMessage = err.error?.mensaje || 'Error al rechazar la solicitud.';
+        this.errorMessage = err.error?.detalle || 'Error al rechazar la solicitud.';
       }
     });
   }

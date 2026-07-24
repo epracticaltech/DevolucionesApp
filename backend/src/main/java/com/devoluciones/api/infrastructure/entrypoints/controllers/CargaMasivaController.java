@@ -19,7 +19,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/cargas")
+@RequestMapping("/api/v1/cargas-masivas")
 public class CargaMasivaController {
 
     private final ProcesarCargaMasivaUseCase procesarCargaMasivaUseCase;

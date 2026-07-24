@@ -248,7 +248,7 @@ export class CargaMasivaComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.mensaje || 'Error al procesar el archivo CSV en el servidor.';
+        this.errorMessage = err.error?.detalle || 'Error al procesar el archivo CSV en el servidor.';
       }
     });
   }
