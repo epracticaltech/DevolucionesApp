@@ -4,9 +4,11 @@ import com.devoluciones.api.infrastructure.adapters.postgres.entities.UsuarioEnt
 import com.devoluciones.api.infrastructure.adapters.postgres.repositories.UsuarioJpaRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 @Component
+@DependsOn("flyway")
 public class DataInitializer implements CommandLineRunner {
 
     private final UsuarioJpaRepository usuarioJpaRepository;
