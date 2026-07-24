@@ -21,48 +21,48 @@ INSERT INTO solicitudes (folio, rut_cliente, nombre_cliente, monto, moneda, banc
 -- Historial Coherente de Eventos de Auditoría (Punto 2.4)
 INSERT INTO eventos_solicitud (solicitud_id, estado_origen, estado_destino, usuario, comentario) VALUES
 -- Solicitud 1: BORRADOR
-(1, NULL, 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
+(1, 'BORRADOR', 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
 
 -- Solicitud 2: BORRADOR (reabierta por analista2)
-(2, NULL, 'BORRADOR', 'analista2', 'Creación manual de solicitud de devolución'),
+(2, 'BORRADOR', 'BORRADOR', 'analista2', 'Creación manual de solicitud de devolución'),
 (2, 'BORRADOR', 'EN_REVISION', 'analista2', 'Enviado a revisión del supervisor'),
 (2, 'EN_REVISION', 'RECHAZADA', 'supervisor1', 'Rechazado: Inconsistencia en comprobante de transferencia'),
 (2, 'RECHAZADA', 'BORRADOR', 'analista2', 'Solicitud reabierta para corrección de antecedentes (Intento 1/1)'),
 
 -- Solicitud 3: EN_REVISION
-(3, NULL, 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
+(3, 'BORRADOR', 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
 (3, 'BORRADOR', 'EN_REVISION', 'analista1', 'Enviado a revisión del supervisor'),
 
 -- Solicitud 4: EN_REVISION (Masiva)
 (4, 'EN_REVISION', 'EN_REVISION', 'SISTEMA_CARGA_MASIVA', 'Creación automática desde Carga Masiva (Archivo: pagos_banco_ejemplo.csv)'),
 
 -- Solicitud 5: APROBADA
-(5, NULL, 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
+(5, 'BORRADOR', 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
 (5, 'BORRADOR', 'EN_REVISION', 'analista1', 'Enviado a revisión del supervisor'),
 (5, 'EN_REVISION', 'APROBADA', 'supervisor1', 'Solicitud aprobada por el supervisor'),
 
 -- Solicitud 6: APROBADA (por supervisor2)
-(6, NULL, 'BORRADOR', 'analista2', 'Creación manual de solicitud de devolución'),
+(6, 'BORRADOR', 'BORRADOR', 'analista2', 'Creación manual de solicitud de devolución'),
 (6, 'BORRADOR', 'EN_REVISION', 'analista2', 'Enviado a revisión del supervisor'),
 (6, 'EN_REVISION', 'APROBADA', 'supervisor2', 'Solicitud aprobada por el supervisor'),
 
 -- Solicitud 7: RECHAZADA
-(7, NULL, 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
+(7, 'BORRADOR', 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
 (7, 'BORRADOR', 'EN_REVISION', 'analista1', 'Enviado a revisión del supervisor'),
 (7, 'EN_REVISION', 'RECHAZADA', 'supervisor1', 'Rechazado: Monto no corresponde a pago duplicado registrado'),
 
 -- Solicitud 8: PAGADA
-(8, NULL, 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
+(8, 'BORRADOR', 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
 (8, 'BORRADOR', 'EN_REVISION', 'analista1', 'Enviado a revisión del supervisor'),
 (8, 'EN_REVISION', 'APROBADA', 'supervisor1', 'Solicitud aprobada por el supervisor'),
 (8, 'APROBADA', 'PAGADA', 'supervisor1', 'Pago de la devolución efectuado exitosamente'),
 
 -- Solicitud 9: PAGADA (por supervisor2)
-(9, NULL, 'BORRADOR', 'analista2', 'Creación manual de solicitud de devolución'),
+(9, 'BORRADOR', 'BORRADOR', 'analista2', 'Creación manual de solicitud de devolución'),
 (9, 'BORRADOR', 'EN_REVISION', 'analista2', 'Enviado a revisión del supervisor'),
 (9, 'EN_REVISION', 'APROBADA', 'supervisor2', 'Solicitud aprobada por el supervisor'),
 (9, 'APROBADA', 'PAGADA', 'supervisor2', 'Pago de la devolución efectuado exitosamente'),
 
 -- Solicitud 10: ANULADA
-(10, NULL, 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
+(10, 'BORRADOR', 'BORRADOR', 'analista1', 'Creación manual de solicitud de devolución'),
 (10, 'BORRADOR', 'ANULADA', 'analista1', 'Solicitud anulada por el analista creador');

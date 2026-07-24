@@ -1,3 +1,6 @@
+-- Secuencia unificada para folios de solicitudes (DEV-AAAA-NNNNNN)
+CREATE SEQUENCE IF NOT EXISTS seq_folio_solicitud START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE usuarios (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,

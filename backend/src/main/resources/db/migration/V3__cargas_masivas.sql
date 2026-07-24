@@ -1,6 +1,3 @@
--- Secuencia unificada para folios de solicitudes (DEV-AAAA-NNNNNN)
-CREATE SEQUENCE IF NOT EXISTS seq_folio_solicitud START WITH 1 INCREMENT BY 1;
-
 -- Tabla de Cargas Masivas
 CREATE TABLE cargas_masivas (
     id BIGSERIAL PRIMARY KEY,
