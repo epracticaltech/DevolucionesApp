@@ -16,8 +16,8 @@ import { AuthService } from '../../core/services/auth.service';
           <p>Inicio de Sesión — Sistema de Gestión</p>
         </div>
 
-        <div *ngIf="errorMessage" class="alert alert-danger">
-          {{ errorMessage }}
+        <div *ngIf="errorMessage" [class]="errorStatus >= 400 && errorStatus < 500 ? 'alert alert-warning' : 'alert alert-danger'">
+          <strong>{{ errorStatus >= 400 && errorStatus < 500 ? 'Advertencia:' : 'Error del servidor:' }}</strong> {{ errorMessage }}
         </div>
 
         <form (ngSubmit)="onLogin()">
@@ -114,6 +114,7 @@ export class LoginComponent {
   password = 'password123';
   loading = false;
   errorMessage = '';
+  errorStatus = 0;
 
   constructor(
     private authService: AuthService,
@@ -124,11 +125,13 @@ export class LoginComponent {
   onLogin(): void {
     if (!this.username || !this.password) {
       this.errorMessage = 'Por favor complete todos los campos.';
+      this.errorStatus = 400;
       return;
     }
 
     this.loading = true;
     this.errorMessage = '';
+    this.errorStatus = 0;
 
     this.authService.login({ username: this.username, password: this.password }).subscribe({
       next: () => {
@@ -138,7 +141,8 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.mensaje || 'Credenciales inválidas. Verifique usuario y contraseña.';
+        this.errorStatus = err.status || 500;
+        this.errorMessage = err.error?.detalle || 'Credenciales inválidas. Verifique usuario y contraseña.';
       }
     });
   }

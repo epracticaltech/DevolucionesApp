@@ -1,5 +1,5 @@
 -- Tabla de Cargas Masivas
-CREATE TABLE cargas_masivas (
+CREATE TABLE IF NOT EXISTS cargas_masivas (
     id BIGSERIAL PRIMARY KEY,
     nombre_archivo VARCHAR(255) NOT NULL,
     total_filas INT NOT NULL DEFAULT 0,
@@ -10,7 +10,7 @@ CREATE TABLE cargas_masivas (
 );
 
 -- Tabla de Detalles de Error por Fila
-CREATE TABLE detalles_carga_error (
+CREATE TABLE IF NOT EXISTS detalles_carga_error (
     id BIGSERIAL PRIMARY KEY,
     carga_id BIGINT NOT NULL REFERENCES cargas_masivas(id) ON DELETE CASCADE,
     numero_fila INT NOT NULL,
@@ -18,4 +18,5 @@ CREATE TABLE detalles_carga_error (
     motivo TEXT NOT NULL
 );
 
-CREATE INDEX idx_detalles_carga_error_carga_id ON detalles_carga_error(carga_id);
+CREATE INDEX IF NOT EXISTS idx_detalles_carga_error_carga_id ON detalles_carga_error(carga_id);
+

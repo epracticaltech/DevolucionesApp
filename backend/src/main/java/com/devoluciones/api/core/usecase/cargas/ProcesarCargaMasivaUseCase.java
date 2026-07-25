@@ -25,10 +25,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.transaction.annotation.Transactional;
+
 /**
  * Caso de Uso: Procesar archivos CSV de Carga Masiva de solicitudes (POST /api/v1/cargas)
  * y consultar el resumen por ID (GET /api/v1/cargas/{id}).
  */
+@Transactional
 public class ProcesarCargaMasivaUseCase {
 
     private static final int BATCH_SIZE = 100;

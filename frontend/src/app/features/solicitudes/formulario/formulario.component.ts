@@ -17,8 +17,8 @@ import { SolicitudService } from '../../../core/services/solicitud.service';
           <p class="subtitle">Complete los antecedentes bancarios y del cliente</p>
         </div>
 
-        <div *ngIf="errorMessage" class="alert alert-danger">
-          <strong>Error del servidor:</strong> {{ errorMessage }}
+        <div *ngIf="errorMessage" [class]="errorStatus >= 400 && errorStatus < 500 ? 'alert alert-warning' : 'alert alert-danger'">
+          <strong>{{ errorStatus >= 400 && errorStatus < 500 ? 'Advertencia:' : 'Error del servidor:' }}</strong> {{ errorMessage }}
         </div>
 
         <form [formGroup]="form" (ngSubmit)="guardar()">
@@ -85,7 +85,7 @@ import { SolicitudService } from '../../../core/services/solicitud.service';
               >
                 <option value="">Seleccione un banco</option>
                 <option value="BANCO CHILE">BANCO CHILE</option>
-                <option value="BANCO ESTADO">BANCO ESTADO (CUENTA RUL)</option>
+                <option value="BANCO ESTADO">BANCO ESTADO (CUENTA RUT)</option>
                 <option value="BANCO SANTANDER">BANCO SANTANDER</option>
                 <option value="BANCO BCI">BANCO BCI</option>
                 <option value="BANCO ITAU">BANCO ITAU</option>
@@ -185,6 +185,7 @@ export class FormularioComponent implements OnInit {
   solicitudId: number | null = null;
   loading = false;
   errorMessage = '';
+  errorStatus = 0;
 
   // Regex mirror for Chilean RUT (e.g. 12345678-5 or 12345678-K)
   private rutRegex = /^(\d{7,8}-[\dkK])$/;
@@ -198,32 +199,36 @@ export class FormularioComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.esEdicion = true;
-      this.solicitudId = Number(id);
-      this.cargarSolicitud(this.solicitudId);
-    }
+    this.route.paramMap.subscribe(params => {
+      const idStr = params.get('id');
+      if (idStr) {
+        this.esEdicion = true;
+        this.solicitudId = +idStr;
+        this.cargarSolicitud(this.solicitudId);
+      }
+    });
   }
 
   private initForm(): void {
     this.form = this.fb.group({
       rutCliente: ['', [Validators.required, Validators.pattern(this.rutRegex)]],
-      nombreCliente: ['', [Validators.required]],
-      monto: ['', [Validators.required, Validators.min(0.01), Validators.max(10000000.00)]],
-      bancoDestino: ['', [Validators.required]],
-      cuentaDestino: ['', [Validators.required]],
-      referenciaBanco: ['', [Validators.required]]
+      nombreCliente: ['', Validators.required],
+      monto: ['', [Validators.required, Validators.min(1)]],
+      bancoDestino: ['', Validators.required],
+      cuentaDestino: ['', Validators.required],
+      referenciaBanco: ['', Validators.required]
     });
   }
 
   cargarSolicitud(id: number): void {
     this.loading = true;
+    this.errorStatus = 0;
     this.solicitudService.obtenerPorId(id).subscribe({
       next: (base) => {
         this.loading = false;
         if (base.solicitud.estado !== 'BORRADOR') {
           this.errorMessage = 'Solo se pueden editar solicitudes en estado BORRADOR.';
+          this.errorStatus = 400;
           this.form.disable();
           return;
         }
@@ -238,7 +243,8 @@ export class FormularioComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.mensaje || 'No se pudo cargar la información de la solicitud.';
+        this.errorStatus = err.status || 500;
+        this.errorMessage = err.error?.detalle || 'No se pudo cargar la información de la solicitud.';
       }
     });
   }
@@ -256,6 +262,7 @@ export class FormularioComponent implements OnInit {
 
     this.loading = true;
     this.errorMessage = '';
+    this.errorStatus = 0;
 
     const payload = this.form.value;
 
@@ -270,7 +277,8 @@ export class FormularioComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.mensaje || 'Error al guardar la solicitud en el servidor.';
+        this.errorStatus = err.status || 500;
+        this.errorMessage = err.error?.detalle || 'Error al guardar la solicitud en el servidor.';
       }
     });
   }

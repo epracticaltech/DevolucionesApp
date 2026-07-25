@@ -66,7 +66,7 @@ public class GestionarSolicitudesBorradorUseCase {
         // 5. Registrar Evento de Auditoría (Regla R6)
         EventoSolicitud eventoInicial = EventoSolicitud.builder()
                 .solicitudId(guardada.getId())
-                .estadoOrigen(null)
+                .estadoOrigen(EstadoSolicitud.BORRADOR)
                 .estadoDestino(EstadoSolicitud.BORRADOR)
                 .usuario(guardada.getCreadaPor())
                 .fecha(ahora)

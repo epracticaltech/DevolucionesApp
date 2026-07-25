@@ -31,7 +31,9 @@ public class CargaMasivaRepositoryAdapter implements CargaMasivaRepositoryPort {
     public CargaMasiva guardar(CargaMasiva cargaMasiva) {
         CargaMasivaEntity entity = toEntity(cargaMasiva);
         CargaMasivaEntity guardada = cargaMasivaJpaRepository.save(entity);
-        return toDomain(guardada);
+        CargaMasiva domain = toDomain(guardada);
+        domain.setErrores(cargaMasiva.getErrores());
+        return domain;
     }
 
     @Override
