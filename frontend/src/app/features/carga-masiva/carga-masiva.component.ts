@@ -52,24 +52,24 @@ import { ResumenCargaMasiva } from '../../core/models/solicitud.model';
         <h3>Resumen del Procesamiento de Carga</h3>
         
         <div class="summary-grid">
-          <div class="stat-box">
+          <div class="stat-box" style="min-width: 0;">
             <span class="stat-label">Archivo</span>
-            <span class="stat-value font-mono">{{ resumen.nombreArchivo }}</span>
+            <span class="stat-value font-mono" [title]="resumen.nombreArchivo">{{ resumen.nombreArchivo }}</span>
           </div>
 
           <div class="stat-box">
             <span class="stat-label">Total Registros</span>
-            <span class="stat-value">{{ resumen.totalRegistros }}</span>
+            <span class="stat-value">{{ resumen.totalFilas }}</span>
           </div>
 
           <div class="stat-box success">
             <span class="stat-label">Procesados OK</span>
-            <span class="stat-value">{{ resumen.registrosExitosos }}</span>
+            <span class="stat-value">{{ resumen.filasProcesadas }}</span>
           </div>
 
-          <div class="stat-box error" [class.has-errors]="resumen.registrosFallidos > 0">
+          <div class="stat-box error" [class.has-errors]="resumen.filasRechazadas > 0">
             <span class="stat-label">Fallidos con Error</span>
-            <span class="stat-value">{{ resumen.registrosFallidos }}</span>
+            <span class="stat-value">{{ resumen.filasRechazadas }}</span>
           </div>
         </div>
 
@@ -81,18 +81,16 @@ import { ResumenCargaMasiva } from '../../core/models/solicitud.model';
             <table>
               <thead>
                 <tr>
-                  <th>Fila #</th>
-                  <th>RUT Cliente</th>
+                  <th style="width: 150px;">Fila #</th>
+                  <th style="width: 200px;">Campo</th>
                   <th>Motivo de Error</th>
-                  <th>Datos de la Fila</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let err of resumen.errores">
-                  <td><strong>Fila {{ err.fila }}</strong></td>
-                  <td>{{ err.rutCliente || 'N/A' }}</td>
-                  <td><span class="text-danger">{{ err.motivoError }}</span></td>
-                  <td><code class="data-code">{{ err.datosFila || '-' }}</code></td>
+                  <td><strong>Fila {{ err.numeroFila }}</strong></td>
+                  <td><code>{{ err.campo || 'N/A' }}</code></td>
+                  <td><span class="text-danger">{{ err.motivo }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -215,6 +213,11 @@ import { ResumenCargaMasiva } from '../../core/models/solicitud.model';
     }
     .font-mono {
       font-family: monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: inline-block;
     }
   `]
 })

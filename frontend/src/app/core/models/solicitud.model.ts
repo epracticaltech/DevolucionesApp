@@ -64,19 +64,19 @@ export interface AuthResponse {
 }
 
 export interface DetalleCargaError {
-  fila: number;
-  rutCliente?: string;
-  motivoError: string;
-  datosFila?: string;
+  numeroFila: number;
+  campo?: string;
+  motivo: string;
 }
 
 export interface ResumenCargaMasiva {
-  cargaId: number;
+  id: number;
   nombreArchivo: string;
-  totalRegistros: number;
-  registrosExitosos: number;
-  registrosFallidos: number;
+  totalFilas: number;
+  filasProcesadas: number;
+  filasRechazadas: number;
   fechaCarga: string;
+  estado: string;
   errores: DetalleCargaError[];
 }
 
