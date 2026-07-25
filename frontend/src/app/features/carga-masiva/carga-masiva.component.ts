@@ -32,8 +32,8 @@ import { ResumenCargaMasiva } from '../../core/models/solicitud.model';
           </label>
         </div>
 
-        <div *ngIf="errorMessage" class="alert alert-danger margin-top">
-          {{ errorMessage }}
+        <div *ngIf="errorMessage" [class]="errorStatus >= 400 && errorStatus < 500 ? 'alert alert-warning margin-top' : 'alert alert-danger margin-top'">
+          <strong>{{ errorStatus >= 400 && errorStatus < 500 ? 'Advertencia:' : 'Error del servidor:' }}</strong> {{ errorMessage }}
         </div>
 
         <div class="upload-actions">
@@ -222,6 +222,7 @@ export class CargaMasivaComponent {
   archivoSeleccionado: File | null = null;
   loading = false;
   errorMessage = '';
+  errorStatus = 0;
   resumen: ResumenCargaMasiva | null = null;
 
   constructor(private solicitudService: SolicitudService) {}
@@ -231,6 +232,7 @@ export class CargaMasivaComponent {
     if (input.files && input.files.length > 0) {
       this.archivoSeleccionado = input.files[0];
       this.errorMessage = '';
+      this.errorStatus = 0;
     }
   }
 
@@ -239,6 +241,7 @@ export class CargaMasivaComponent {
 
     this.loading = true;
     this.errorMessage = '';
+    this.errorStatus = 0;
     this.resumen = null;
 
     this.solicitudService.cargarCsv(this.archivoSeleccionado).subscribe({
@@ -248,6 +251,7 @@ export class CargaMasivaComponent {
       },
       error: (err) => {
         this.loading = false;
+        this.errorStatus = err.status || 500;
         this.errorMessage = err.error?.detalle || 'Error al procesar el archivo CSV en el servidor.';
       }
     });

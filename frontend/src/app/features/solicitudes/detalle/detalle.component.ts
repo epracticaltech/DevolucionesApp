@@ -37,8 +37,8 @@ import { EventoSolicitud, SolicitudBase } from '../../../core/models/solicitud.m
         </div>
       </div>
 
-      <div *ngIf="errorMessage" class="alert alert-danger">
-        {{ errorMessage }}
+      <div *ngIf="errorMessage" [class]="errorStatus >= 400 && errorStatus < 500 ? 'alert alert-warning' : 'alert alert-danger'">
+        <strong>{{ errorStatus >= 400 && errorStatus < 500 ? 'Advertencia:' : 'Error del servidor:' }}</strong> {{ errorMessage }}
       </div>
 
       <div *ngIf="successMessage" class="alert alert-success">
@@ -401,6 +401,7 @@ export class DetalleComponent implements OnInit {
   loading = true;
   errorMessage = '';
   successMessage = '';
+  errorStatus = 0;
 
   comentario = '';
   motivoRechazo = '';
@@ -423,6 +424,7 @@ export class DetalleComponent implements OnInit {
 
   cargarDatos(id: number): void {
     this.loading = true;
+    this.errorStatus = 0;
     this.solicitudService.obtenerPorId(id).subscribe({
       next: (base) => {
         this.baseData = base;
@@ -431,6 +433,7 @@ export class DetalleComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
+        this.errorStatus = err.status || 500;
         this.errorMessage = err.error?.detalle || 'No se pudo cargar la solicitud.';
       }
     });
@@ -454,6 +457,7 @@ export class DetalleComponent implements OnInit {
     if (!this.baseData) return;
     const id = this.baseData.solicitud.id;
     this.errorMessage = '';
+    this.errorStatus = 0;
     this.successMessage = '';
 
     let call$;
@@ -473,6 +477,7 @@ export class DetalleComponent implements OnInit {
         this.cargarHistorial(id);
       },
       error: (err) => {
+        this.errorStatus = err.status || 500;
         this.errorMessage = err.error?.detalle || 'Error al ejecutar la acción.';
       }
     });
@@ -487,10 +492,13 @@ export class DetalleComponent implements OnInit {
     if (!this.baseData) return;
     if (!this.motivoRechazo.trim()) {
       this.errorMessage = 'El motivo de rechazo es obligatorio (Regla R3).';
+      this.errorStatus = 400;
       return;
     }
 
     const id = this.baseData.solicitud.id;
+    this.errorMessage = '';
+    this.errorStatus = 0;
     this.solicitudService.rechazar(id, this.motivoRechazo, this.comentario).subscribe({
       next: (res) => {
         this.baseData = res;
@@ -501,6 +509,7 @@ export class DetalleComponent implements OnInit {
         this.cargarHistorial(id);
       },
       error: (err) => {
+        this.errorStatus = err.status || 500;
         this.errorMessage = err.error?.detalle || 'Error al rechazar la solicitud.';
       }
     });
