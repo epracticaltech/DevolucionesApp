@@ -85,7 +85,7 @@ import { SolicitudService } from '../../../core/services/solicitud.service';
               >
                 <option value="">Seleccione un banco</option>
                 <option value="BANCO CHILE">BANCO CHILE</option>
-                <option value="BANCO ESTADO">BANCO ESTADO (CUENTA RUL)</option>
+                <option value="BANCO ESTADO">BANCO ESTADO (CUENTA RUT)</option>
                 <option value="BANCO SANTANDER">BANCO SANTANDER</option>
                 <option value="BANCO BCI">BANCO BCI</option>
                 <option value="BANCO ITAU">BANCO ITAU</option>
