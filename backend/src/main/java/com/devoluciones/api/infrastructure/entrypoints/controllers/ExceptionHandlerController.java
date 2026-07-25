@@ -98,7 +98,7 @@ public class ExceptionHandlerController {
             MethodArgumentNotValidException ex, HttpServletRequest request) {
 
         String detalles = ex.getBindingResult().getFieldErrors().stream()
-                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                .map(fieldError -> fieldError.getDefaultMessage())
                 .collect(Collectors.joining("; "));
 
         ErrorResponseDTO error = new ErrorResponseDTO(
